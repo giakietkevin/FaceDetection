@@ -85,21 +85,17 @@
 <!-- Social Sharing -->
 <div class="card-lowest card-base">
 <h4 class="title-md mb-8 flex items-center gap-3">
-<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">share</span>
-                        Gửi cho người thân (Zalo/Telegram)
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">campaign</span>
+                        Thông báo khẩn cấp
                     </h4>
-<div class="grid grid-cols-2 gap-6">
-<button class="h-20 card-medium card-base flex items-center justify-center gap-3 hover:bg-primary-fixed transition-colors active:scale-95 group">
-<img alt="Zalo icon" class="w-10 h-10 rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDavb4gJ46fTCzrlWL9Qxje5t4bbxpnD-500VplI4Pdcowyl1Z3io7vx09He5Y5ns-lC0oaZ7n2iQZLp8QUSFtlxqxu_zbmUgWcG0lDblAaA_F8-tP51DKOVAUo0NispSobYNoOjTKEzk9a7neYmvsL8gxWm3_z8pFSHMebpXknUXxEfL_W8rSr3I_8ycQDbOF9GhNjgskzCS_o7F563UNNOseEuKS-2us_oRP68tasVtsBYbsogoTvd0jIiBuHzzM5zyn39dPi-fG3"/>
-<span class="font-bold text-primary group-hover:text-on-primary-fixed">Zalo</span>
-</button>
-<button class="h-20 card-medium card-base flex items-center justify-center gap-3 hover:bg-primary-fixed transition-colors active:scale-95 group">
-<img alt="Telegram icon" class="w-10 h-10 rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAockoy1e5ytPooMflSvSYVhPY5tv7Cox00Sf8qePJVi2HZI4NvUXuJbQ0tHfLzF3he_2G1GNcP-78vqatIk9EHH-9lSWUgSkUj1BFIwLjmHIIiMlGBjUtiygS6L0RkzATl2OzjQ1EXi0nK2jssF3_3Xza7cnnOx34_axD2XxdvivY3aHZ3Ec0eTM-jMqCdyPS70-aMHK0-w6p0SkDjBIwYTrybv3Sfqx-zC9ZDf3m5ZBfkV_xb4NrPxCY926LPUrf00EdIfcnQ5trW"/>
-<span class="font-bold text-primary group-hover:text-on-primary-fixed">Telegram</span>
+<div class="grid grid-cols-1 gap-6">
+<button class="h-20 btn-error w-full flex items-center justify-center gap-3 hover:bg-error-container hover:text-on-error-container transition-colors active:scale-95 group" onclick="app.sendNotificationToFamily()">
+<span class="material-symbols-outlined icon-md">notifications_active</span>
+<span class="font-bold text-lg">Gửi thông báo ngay cho người thân</span>
 </button>
 </div>
-<p class="mt-8 text-on-surface-variant body-md leading-relaxed italic">
-                        "Việc chia sẻ kết quả giúp người thân của bạn biết được sự việc và hỗ trợ bạn kịp thời."
+<p class="mt-8 text-on-surface-variant body-md leading-relaxed italic text-center">
+                        "Hệ thống sẽ gửi cảnh báo trực tiếp đến các số điện thoại bạn đã cài đặt."
                     </p>
 </div>
 <!-- Secondary Actions -->

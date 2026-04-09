@@ -67,6 +67,40 @@
                 Giải pháp an toàn giúp Ông Bà và Cha Mẹ nhận diện lừa đảo công nghệ cao một cách dễ dàng nhất.
             </p>
         </header>
+        <!-- Statistics Dashboard -->
+        <section id="stats-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 breathing-space-lg" style="display: none;">
+            <!-- Total Scans -->
+            <div class="card-lowest card-base flex items-center gap-6">
+                <div class="w-16 h-16 bg-primary-fixed rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined icon-md text-primary" style="font-variation-settings: 'FILL' 1;">search</span>
+                </div>
+                <div>
+                    <p class="label-lg text-on-surface-variant mb-1">Tổng lượt kiểm tra</p>
+                    <p id="stat-total-scans" class="display-md text-primary">0</p>
+                </div>
+            </div>
+            <!-- High Risk Count -->
+            <div class="card-lowest card-base flex items-center gap-6">
+                <div class="w-16 h-16 bg-error-container rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined icon-md text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+                </div>
+                <div>
+                    <p class="label-lg text-on-surface-variant mb-1">Phát hiện nguy hiểm</p>
+                    <p id="stat-high-risk" class="display-md text-error">0</p>
+                </div>
+            </div>
+            <!-- Last Scan -->
+            <div class="card-lowest card-base flex items-center gap-6">
+                <div class="w-16 h-16 bg-secondary-container rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined icon-md text-secondary" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                </div>
+                <div>
+                    <p class="label-lg text-on-surface-variant mb-1">Lần kiểm tra cuối</p>
+                    <p id="stat-last-scan" class="title-md text-on-surface">Chưa có</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Ultra-Simplified UI Action Buttons -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 breathing-space-xl">
             <!-- Big Action 1: Video/Photo -->

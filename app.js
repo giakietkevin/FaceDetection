@@ -49,6 +49,7 @@ class ApiClient {
 
   async get(endpoint) {
     const res = await fetch(`${API_BASE}${endpoint}`, { headers: this.headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
 
@@ -57,6 +58,17 @@ class ApiClient {
       method: 'DELETE',
       headers: this.headers
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  async put(endpoint, body) {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'PUT',
+      headers: { ...this.headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
 }
@@ -230,12 +242,34 @@ class DetectionHandler {
 
   async getHistory(limit = 20, offset = 0) {
     try {
-      return await this.api.get(`/detect/history?limit=${limit}&offset=${offset}`);
-    } catch {
-      // Fallback to localStorage
-      const data = localStorage.getItem('detectionHistory');
-      const detections = data ? JSON.parse(data) : [];
-      return { success: true, detections, total: detections.length };
+      const result = await this.api.get(`/detect/history?limit=${limit}&offset=${offset}`);
+      if (result.success) {
+        return result;
+      }
+    } catch (err) {
+      console.error('[getHistory] Error:', err);
+    }
+    // Fallback to localStorage
+    const data = localStorage.getItem('detectionHistory');
+    const detections = data ? JSON.parse(data) : [];
+    return { success: true, detections, total: detections.length };
+  }
+
+  async getStats() {
+    try {
+      return await this.api.get('/stats/summary');
+    } catch (err) {
+      console.error('[getStats] Error:', err);
+      return { success: false };
+    }
+  }
+
+  async sendNotification(detectionId) {
+    try {
+      return await this.api.post('/notifications/send', { detectionId });
+    } catch (err) {
+      console.error('[sendNotification] Error:', err);
+      return { success: false, message: 'Lỗi khi gửi thông báo' };
     }
   }
 
@@ -629,6 +663,9 @@ const app = {
   },
 
   initHomePage() {
+    // Load statistics
+    this.loadStatistics();
+
     // Video/Image upload button
     const videoBtn = document.querySelector('.hero-action-btn.signature-gradient');
     if (videoBtn) {
@@ -684,6 +721,25 @@ const app = {
     }
   },
 
+  async loadStatistics() {
+    try {
+      const result = await this.detection.getStats();
+      if (result.success && result.summary) {
+        const dashboard = document.getElementById('stats-dashboard');
+        if (dashboard) {
+          document.getElementById('stat-total-scans').textContent = result.summary.totalScans || 0;
+          document.getElementById('stat-high-risk').textContent = result.summary.highRiskCount || 0;
+          document.getElementById('stat-last-scan').textContent = result.summary.lastScanDate
+            ? new Date(result.summary.lastScanDate).toLocaleDateString('vi-VN')
+            : 'Chưa có';
+          dashboard.style.display = 'grid';
+        }
+      }
+    } catch (err) {
+      console.error('[loadStatistics] Error:', err);
+    }
+  }
+
   initDetectResultPage() {
     const result = this.detection.getLatestDetection();
     if (!result) {
@@ -732,10 +788,34 @@ const app = {
     }
   },
 
+  async sendNotificationToFamily() {
+    const result = this.detection.getLatestDetection();
+    if (!result) {
+      this.detection.showError('Không có kết quả phân tích để gửi');
+      return;
+    }
+
+    this.detection.showLoading('Đang gửi thông báo...');
+
+    try {
+      const response = await this.detection.sendNotification(result.id);
+      this.detection.hideLoading();
+
+      if (response.success) {
+        this.showSuccess(response.message || `Đã gửi thông báo cho ${response.sent} người thân`);
+      } else {
+        this.detection.showError(response.message || 'Lỗi khi gửi thông báo');
+      }
+    } catch (err) {
+      this.detection.hideLoading();
+      this.detection.showError('Lỗi khi gửi thông báo');
+    }
+  }
+
   async initFamilyContactPage() {
     const nameInput = document.querySelector('input[placeholder*="tên người thân"]');
     const phoneInput = document.querySelector('input[placeholder*="090"]');
-    const saveBtn = document.querySelector('button.btn-primary');
+    const saveBtn = document.getElementById('save-contact-btn') || document.querySelector('button.btn-primary');
 
     if (saveBtn && nameInput && phoneInput) {
       saveBtn.addEventListener('click', async () => {
@@ -774,7 +854,7 @@ const app = {
 
     if (!listContainer) {
       // Create contact list container after save button
-      const saveBtn = document.querySelector('button.btn-primary');
+      const saveBtn = document.getElementById('save-contact-btn') || document.querySelector('button.btn-primary');
       if (!saveBtn) return;
 
       listContainer = document.createElement('div');
@@ -801,10 +881,16 @@ const app = {
               <p class="body-md text-on-surface-variant">${c.phone}</p>
             </div>
           </div>
-          <button class="touch-target text-error hover:bg-error-container rounded-xl transition-colors"
-                  onclick="app.deleteContact('${c.id}')">
-            <span class="material-symbols-outlined">delete</span>
-          </button>
+          <div class="flex gap-2">
+            <button class="touch-target text-secondary hover:bg-secondary-container rounded-xl transition-colors"
+                    onclick="app.sendTestNotification('${c.id}')" title="Gửi tin nhắn thử nghiệm">
+              <span class="material-symbols-outlined">mail</span>
+            </button>
+            <button class="touch-target text-error hover:bg-error-container rounded-xl transition-colors"
+                    onclick="app.deleteContact('${c.id}')">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
         </div>
       `).join('')}
     `;
@@ -816,8 +902,26 @@ const app = {
     this.showSuccess('Đã xóa liên hệ');
   },
 
+  async sendTestNotification(contactId) {
+    this.detection.showLoading('Đang gửi tin nhắn thử nghiệm...');
+
+    try {
+      const response = await this.api.post('/notifications/test', { contactId });
+      this.detection.hideLoading();
+
+      if (response.success) {
+        this.showSuccess(response.message || 'Đã gửi tin nhắn thử nghiệm');
+      } else {
+        this.detection.showError(response.message || 'Lỗi khi gửi tin nhắn');
+      }
+    } catch (err) {
+      this.detection.hideLoading();
+      this.detection.showError('Lỗi khi gửi tin nhắn thử nghiệm');
+    }
+  }
+
   async showHistoryModal() {
-    const historyData = await this.detection.getHistory();
+    const historyData = await this.detection.getHistory(50, 0);
     const detections = historyData.detections || [];
 
     const modal = document.createElement('div');
