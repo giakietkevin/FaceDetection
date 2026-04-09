@@ -8,7 +8,7 @@ const Detection = {
   /**
    * Create a new detection record
    */
-  create({ userId, type, fileName, url, riskLevel, confidence, details }) {
+  create({ userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics }) {
     const detection = {
       id: uuidv4(),
       userId,
@@ -18,22 +18,30 @@ const Detection = {
       riskLevel,
       confidence,
       details: details || null,
+      explanations: explanations ? JSON.stringify(explanations) : null,
+      analysisMetrics: analysisMetrics ? JSON.stringify(analysisMetrics) : null,
       createdAt: new Date().toISOString()
     };
 
     db.prepare(`
-      INSERT INTO detections (id, userId, type, fileName, url, riskLevel, confidence, details, createdAt)
-      VALUES (@id, @userId, @type, @fileName, @url, @riskLevel, @confidence, @details, @createdAt)
+      INSERT INTO detections (id, userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics, createdAt)
+      VALUES (@id, @userId, @type, @fileName, @url, @riskLevel, @confidence, @details, @explanations, @analysisMetrics, @createdAt)
     `).run(detection);
 
-    return detection;
+    // Return parsed version for API response
+    return {
+      ...detection,
+      explanations: explanations || [],
+      analysisMetrics: analysisMetrics || {}
+    };
   },
 
   /**
    * Find a detection by ID
    */
   findById(id) {
-    return db.prepare('SELECT * FROM detections WHERE id = ?').get(id);
+    const row = db.prepare('SELECT * FROM detections WHERE id = ?').get(id);
+    return row ? this._parseJsonFields(row) : null;
   },
 
   /**
@@ -51,7 +59,7 @@ const Detection = {
       'SELECT COUNT(*) as count FROM detections WHERE userId = ?'
     ).get(userId);
 
-    return { detections: rows, total };
+    return { detections: rows.map(r => this._parseJsonFields(r)), total };
   },
 
   /**
@@ -106,7 +114,16 @@ const Detection = {
       'DELETE FROM detections WHERE id = ? AND userId = ?'
     ).run(id, userId);
     return result.changes > 0;
+  },
+
+  /**
+   * Parse JSON fields from database row
+   */
+  _parseJsonFields(row) {
+    return {
+      ...row,
+      explanations: row.explanations ? JSON.parse(row.explanations) : [],
+      analysisMetrics: row.analysisMetrics ? JSON.parse(row.analysisMetrics) : {}
+    };
   }
 };
-
-module.exports = Detection;

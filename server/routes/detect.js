@@ -66,7 +66,9 @@ router.post('/video', extractUserId, rateLimit(30, 60000), upload.single('file')
       fileName: file.originalname,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail
+      details: analysis.detail,
+      explanations: analysis.explanations,
+      analysisMetrics: analysis.metrics
     });
 
     // Auto-notify family if high/medium risk
@@ -102,7 +104,9 @@ router.post('/audio', extractUserId, rateLimit(30, 60000), upload.single('file')
       fileName: file.originalname,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail
+      details: analysis.detail,
+      explanations: analysis.explanations,
+      analysisMetrics: analysis.metrics
     });
 
     // Auto-notify family if high/medium risk
@@ -134,7 +138,9 @@ router.post('/link', extractUserId, rateLimit(60, 60000), express.json(), valida
       url,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail
+      details: analysis.detail,
+      explanations: analysis.explanations,
+      analysisMetrics: analysis.metrics
     });
 
     // Auto-notify family if high risk
