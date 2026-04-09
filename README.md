@@ -30,11 +30,11 @@ SafeGuard Senior là một ứng dụng web được thiết kế đặc biệt 
 - ✅ Cuộc gọi khẩn cấp nhanh chóng
 - ✅ Cẩm nang giáo dục về các kịch bản lừa đảo
 - ✅ Lưu trữ cục bộ (Local Storage)
+- ✅ Backend API với database (SQLite)
+- ✅ Lịch sử phân tích chi tiết
 
 ### Sắp tới
-- 🔄 Backend API với database
 - 🔄 Tích hợp AI model thực tế
-- 🔄 Lịch sử phân tích chi tiết
 - 🔄 Dashboard thống kê
 - 🔄 Dark mode
 - 🔄 PWA & Offline support
@@ -90,15 +90,38 @@ safeguard-senior/
 ├── detectResult.html         # Trang kết quả phân tích
 ├── education.html            # Cẩm nang giáo dục
 ├── familyContact.html        # Kết nối với người thân
-├── app.js                    # Logic ứng dụng chính
+├── app.js                    # Logic ứng dụng chính (client-side)
+├── server/
+│   ├── index.js             # Express server entry point
+│   ├── db.js                # SQLite database setup
+│   ├── middleware/
+│   │   ├── auth.js          # User authentication & rate limiting
+│   │   ├── validator.js     # Input validation
+│   │   └── errorHandler.js  # Centralized error handling
+│   ├── models/
+│   │   ├── Detection.js     # Detection database queries
+│   │   ├── FamilyContact.js # Family contact queries
+│   │   └── User.js          # User model
+│   ├── routes/
+│   │   ├── detect.js        # Detection API routes
+│   │   ├── contacts.js      # Family contact API routes
+│   │   ├── stats.js         # Statistics API routes
+│   │   └── notifications.js # Notification API routes
+│   └── services/
+│       ├── analysis.js      # AI analysis service (simulated)
+│       └── notification.js  # Notification service
+├── data/
+│   └── safeguard.db         # SQLite database
+├── uploads/                  # Uploaded files storage
 ├── styles/
 │   ├── input.css            # Tailwind + design system
 │   └── output.css           # CSS build (minified)
 ├── tailwind.config.js        # Tailwind configuration
 ├── postcss.config.js         # PostCSS configuration
 ├── package.json              # Dependencies
-├── .gitignore                # Git ignore rules
-└── README.md                 # Tài liệu này
+├── API_DOCUMENTATION.md      # Full API documentation
+├── DESIGN.md                 # Design system specification
+└── README.md                 # This file
 ```
 
 ## 🛠️ Hướng dẫn phát triển
@@ -147,7 +170,33 @@ Sử dụng các class có sẵn từ Guardian's Hearth:
 
 ## 📡 API Documentation
 
-### Hiện tại (Local Storage)
+### Backend API (Available Now)
+
+```
+POST   /api/detect/video       - Upload video/image for analysis
+POST   /api/detect/audio       - Upload audio for voice cloning detection
+POST   /api/detect/link        - Check URL for phishing/scam
+GET    /api/detect/history     - Get detection history
+GET    /api/detect/:id         - Get single detection
+DELETE /api/detect/:id         - Delete detection
+
+GET    /api/contacts           - Get all family contacts
+POST   /api/contacts           - Add family contact
+PUT    /api/contacts/:id       - Update family contact
+DELETE /api/contacts/:id       - Delete family contact
+
+GET    /api/stats              - Get full statistics
+GET    /api/stats/summary      - Get quick summary
+
+POST   /api/notifications/send - Send notification about detection
+POST   /api/notifications/test - Send test notification
+
+GET    /api/health             - Health check
+```
+
+**Full API Documentation**: See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+### Client-Side API (JavaScript)
 
 ```javascript
 // Detection results
@@ -164,17 +213,6 @@ app.voice.readDetectionResult(result)
 
 // Emergency
 app.emergency.call('police') // or 'family'
-```
-
-### Sắp tới (Backend API)
-
-```
-POST /api/detect/video
-POST /api/detect/audio
-POST /api/detect/link
-GET  /api/history
-POST /api/contacts
-GET  /api/contacts
 ```
 
 ## 🌐 Deployment

@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm start:*)",
+      "Bash(del /F \"D:\\\\FaceDetection\\\\data\\\\safeguard.db\" \"D:\\\\FaceDetection\\\\data\\\\safeguard.db-wal\" \"D:\\\\FaceDetection\\\\data\\\\safeguard.db-shm\")",
+      "Bash(node -e \"const m = require\\('multer'\\); console.log\\(typeof m, typeof m.diskStorage\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s -X POST http://localhost:3000/api/detect/link -H \"Content-Type: application/json\" -H \"x-user-id: user-123\" -d \"{\\\\\"url\\\\\": \\\\\"https://example.com/suspicious-video\\\\\"}\")",
+      "Bash(curl -s \"http://localhost:3000/api/detect/history\" -H \"x-user-id: user-123\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/contacts -H \"Content-Type: application/json\" -H \"x-user-id: user-123\" -d \"{\\\\\"name\\\\\": \\\\\"Con trai\\\\\", \\\\\"phone\\\\\": \\\\\"0912345678\\\\\", \\\\\"platform\\\\\": \\\\\"Zalo\\\\\", \\\\\"autoNotify\\\\\": 1}\")",
+      "Bash(curl -s http://localhost:3000/api/contacts -H \"x-user-id: user-123\")",
+      "Bash(node -e \"require\\('./server/index.js'\\)\")",
+      "Bash(cat:*)",
+      "Bash(node:*)"
     ]
   }
 }

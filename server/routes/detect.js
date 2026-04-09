@@ -5,18 +5,28 @@
 // POST /api/detect/link
 // GET  /api/detect/history
 // GET  /api/detect/:id
+// DELETE /api/detect/:id
 // ============================================
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const Detection = require('../models/Detection');
+const analysisService = require('../services/analysis');
+const notificationService = require('../services/notification');
+const { extractUserId, rateLimit } = require('../middleware/auth');
+const { validateLinkData, validatePagination } = require('../middleware/validator');
 
 // Configure file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
+    const uploadDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -37,60 +47,34 @@ const upload = multer({
   }
 });
 
-// Helper: simulate AI analysis (replace with real model later)
-function simulateAnalysis(type) {
-  const risks = ['low', 'medium', 'high'];
-  const riskLevel = risks[Math.floor(Math.random() * risks.length)];
-  const confidence = Math.floor(Math.random() * 40) + 60; // 60–100%
-
-  const details = {
-    video: {
-      high: 'Vùng mắt chớp không tự nhiên (blink rate 2.3/s, bình thường 14-17/s). Phát hiện artifact nén không đồng đều quanh vùng mặt. Khả năng cao là video Deepfake.',
-      medium: 'Phát hiện một số dấu hiệu bất thường ở vùng da mặt. Cần kiểm tra thêm để xác định.',
-      low: 'Không phát hiện dấu hiệu bất thường đáng kể. Video có vẻ xác thực.'
-    },
-    audio: {
-      high: 'Phát hiện tần số không tự nhiên (pitch fluctuation 12Hz, bình thường 3-5Hz). Có dấu hiệu sử dụng voice cloning.',
-      medium: 'Một số đặc điểm giọng nói có thể không khớp. Cần xác minh thêm.',
-      low: 'Giọng nói có vẻ tự nhiên, không phát hiện dấu hiệu giả mạo.'
-    },
-    link: {
-      high: 'URL dẫn đến trang web có lịch sử lừa đảo. Domain đăng ký < 30 ngày. Cảnh báo ngay lập tức.',
-      medium: 'Trang web chưa được xác minh. Có một số dấu hiệu đáng ngờ.',
-      low: 'Đường dẫn an toàn. Không phát hiện mối đe dọa.'
-    }
-  };
-
-  return { riskLevel, confidence, detail: details[type]?.[riskLevel] || '' };
-}
-
-// POST /api/detect/video
-router.post('/video', upload.single('file'), (req, res) => {
+// POST /api/detect/video - Analyze video/image for deepfake
+router.post('/video', extractUserId, rateLimit(30, 60000), upload.single('file'), async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ success: false, message: 'Vui lòng tải lên file video' });
+      return res.status(400).json({ success: false, message: 'Vui lòng tải lên file video hoặc ảnh' });
     }
 
-    const analysis = simulateAnalysis('video');
-    const detection = {
-      id: uuidv4(),
-      userId,
+    // Run analysis
+    const analysis = analysisService.analyzeVideo(file.originalname);
+
+    // Save to database
+    const detection = Detection.create({
+      userId: req.userId,
       type: 'video',
       fileName: file.originalname,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail,
-      createdAt: new Date().toISOString()
-    };
+      details: analysis.detail
+    });
 
-    const stmt = db.prepare(`
-      INSERT INTO detections (id, userId, type, fileName, riskLevel, confidence, details, createdAt)
-      VALUES (@id, @userId, @type, @fileName, @riskLevel, @confidence, @details, @createdAt)
-    `);
-    stmt.run(detection);
+    // Auto-notify family if high/medium risk
+    if (analysis.riskLevel === 'high' || analysis.riskLevel === 'medium') {
+      notificationService.notifyFamily(req.userId, detection).catch(err => {
+        console.error('[Notify] Background notification failed:', err);
+      });
+    }
 
     res.json({ success: true, detection });
   } catch (err) {
@@ -99,33 +83,34 @@ router.post('/video', upload.single('file'), (req, res) => {
   }
 });
 
-// POST /api/detect/audio
-router.post('/audio', upload.single('file'), (req, res) => {
+// POST /api/detect/audio - Analyze audio for voice cloning
+router.post('/audio', extractUserId, rateLimit(30, 60000), upload.single('file'), async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
     const file = req.file;
 
     if (!file) {
       return res.status(400).json({ success: false, message: 'Vui lòng tải lên file âm thanh' });
     }
 
-    const analysis = simulateAnalysis('audio');
-    const detection = {
-      id: uuidv4(),
-      userId,
+    // Run analysis
+    const analysis = analysisService.analyzeAudio(file.originalname);
+
+    // Save to database
+    const detection = Detection.create({
+      userId: req.userId,
       type: 'audio',
       fileName: file.originalname,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail,
-      createdAt: new Date().toISOString()
-    };
+      details: analysis.detail
+    });
 
-    const stmt = db.prepare(`
-      INSERT INTO detections (id, userId, type, fileName, riskLevel, confidence, details, createdAt)
-      VALUES (@id, @userId, @type, @fileName, @riskLevel, @confidence, @details, @createdAt)
-    `);
-    stmt.run(detection);
+    // Auto-notify family if high/medium risk
+    if (analysis.riskLevel === 'high' || analysis.riskLevel === 'medium') {
+      notificationService.notifyFamily(req.userId, detection).catch(err => {
+        console.error('[Notify] Background notification failed:', err);
+      });
+    }
 
     res.json({ success: true, detection });
   } catch (err) {
@@ -134,38 +119,30 @@ router.post('/audio', upload.single('file'), (req, res) => {
   }
 });
 
-// POST /api/detect/link
-router.post('/link', express.json(), (req, res) => {
+// POST /api/detect/link - Analyze URL for phishing/scam
+router.post('/link', extractUserId, rateLimit(60, 60000), express.json(), validateLinkData, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
     const { url } = req.body;
 
-    if (!url) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập đường dẫn' });
-    }
+    // Run analysis
+    const analysis = analysisService.analyzeLink(url);
 
-    // Basic URL validation
-    try { new URL(url); } catch {
-      return res.status(400).json({ success: false, message: 'Đường dẫn không hợp lệ' });
-    }
-
-    const analysis = simulateAnalysis('link');
-    const detection = {
-      id: uuidv4(),
-      userId,
+    // Save to database
+    const detection = Detection.create({
+      userId: req.userId,
       type: 'link',
       url,
       riskLevel: analysis.riskLevel,
       confidence: analysis.confidence,
-      details: analysis.detail,
-      createdAt: new Date().toISOString()
-    };
+      details: analysis.detail
+    });
 
-    const stmt = db.prepare(`
-      INSERT INTO detections (id, userId, type, url, riskLevel, confidence, details, createdAt)
-      VALUES (@id, @userId, @type, @url, @riskLevel, @confidence, @details, @createdAt)
-    `);
-    stmt.run(detection);
+    // Auto-notify family if high risk
+    if (analysis.riskLevel === 'high') {
+      notificationService.notifyFamily(req.userId, detection).catch(err => {
+        console.error('[Notify] Background notification failed:', err);
+      });
+    }
 
     res.json({ success: true, detection });
   } catch (err) {
@@ -175,24 +152,12 @@ router.post('/link', express.json(), (req, res) => {
 });
 
 // GET /api/detect/history?limit=20&offset=0
-router.get('/history', (req, res) => {
+router.get('/history', extractUserId, validatePagination, (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
-    const limit = parseInt(req.query.limit) || 20;
-    const offset = parseInt(req.query.offset) || 0;
+    const { limit, offset } = req.query;
+    const { detections, total } = Detection.findByUser(req.userId, limit, offset);
 
-    const rows = db.prepare(`
-      SELECT * FROM detections
-      WHERE userId = ?
-      ORDER BY createdAt DESC
-      LIMIT ? OFFSET ?
-    `).all(userId, limit, offset);
-
-    const total = db.prepare(`
-      SELECT COUNT(*) as count FROM detections WHERE userId = ?
-    `).get(userId).count;
-
-    res.json({ success: true, detections: rows, total, limit, offset });
+    res.json({ success: true, detections, total, limit, offset });
   } catch (err) {
     console.error('[GET /detect/history]', err);
     res.status(500).json({ success: false, message: 'Lỗi server khi lấy lịch sử' });
@@ -202,14 +167,33 @@ router.get('/history', (req, res) => {
 // GET /api/detect/:id
 router.get('/:id', (req, res) => {
   try {
-    const row = db.prepare('SELECT * FROM detections WHERE id = ?').get(req.params.id);
-    if (!row) {
+    const detection = Detection.findById(req.params.id);
+    if (!detection) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy kết quả phân tích' });
     }
-    res.json({ success: true, detection: row });
+    res.json({ success: true, detection });
   } catch (err) {
     console.error('[GET /detect/:id]', err);
     res.status(500).json({ success: false, message: 'Lỗi server' });
+  }
+});
+
+// DELETE /api/detect/:id
+router.delete('/:id', extractUserId, (req, res) => {
+  try {
+    const deleted = Detection.delete(req.params.id, req.userId);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy kết quả hoặc không có quyền xóa'
+      });
+    }
+
+    res.json({ success: true, message: 'Đã xóa kết quả phân tích' });
+  } catch (err) {
+    console.error('[DELETE /detect/:id]', err);
+    res.status(500).json({ success: false, message: 'Lỗi server khi xóa kết quả' });
   }
 });
 

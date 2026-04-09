@@ -2,19 +2,19 @@
 // FAMILY CONTACT ROUTES
 // GET    /api/contacts
 // POST   /api/contacts
+// PUT    /api/contacts/:id
 // DELETE /api/contacts/:id
 // ============================================
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const FamilyContact = require('../models/FamilyContact');
+const { extractUserId } = require('../middleware/auth');
+const { validateContactData } = require('../middleware/validator');
 
 // GET /api/contacts
-router.get('/', (req, res) => {
+router.get('/', extractUserId, (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
-    const contacts = db.prepare('SELECT * FROM family_contacts WHERE userId = ? ORDER BY createdAt DESC').all(userId);
-
+    const contacts = FamilyContact.findByUser(req.userId);
     res.json({ success: true, contacts });
   } catch (err) {
     console.error('[GET /contacts]', err);
@@ -23,30 +23,34 @@ router.get('/', (req, res) => {
 });
 
 // POST /api/contacts
-router.post('/', express.json(), (req, res) => {
+router.post('/', extractUserId, express.json(), validateContactData, (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
-    const { name, phone, platform = 'Zalo', autoNotify = 1 } = req.body;
+    const { name, phone, platform = 'Zalo', autoNotify = true } = req.body;
 
-    if (!name || !phone) {
-      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp tên và số điện thoại' });
+    // Check for duplicate phone
+    const existing = FamilyContact.findByUser(req.userId);
+    if (existing.some(c => c.phone === phone)) {
+      return res.status(409).json({
+        success: false,
+        message: 'Số điện thoại này đã được thêm'
+      });
     }
 
-    const contact = {
-      id: uuidv4(),
-      userId,
+    // Limit max contacts per user
+    if (existing.length >= 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tối đa 10 người thân. Vui lòng xóa liên hệ cũ trước.'
+      });
+    }
+
+    const contact = FamilyContact.create({
+      userId: req.userId,
       name,
       phone,
       platform,
-      autoNotify: autoNotify ? 1 : 0,
-      createdAt: new Date().toISOString()
-    };
-
-    const stmt = db.prepare(`
-      INSERT INTO family_contacts (id, userId, name, phone, platform, autoNotify, createdAt)
-      VALUES (@id, @userId, @name, @phone, @platform, @autoNotify, @createdAt)
-    `);
-    stmt.run(contact);
+      autoNotify
+    });
 
     res.json({ success: true, contact, message: 'Thêm người thân thành công' });
   } catch (err) {
@@ -55,14 +59,52 @@ router.post('/', express.json(), (req, res) => {
   }
 });
 
-// DELETE /api/contacts/:id
-router.delete('/:id', (req, res) => {
+// PUT /api/contacts/:id - Update a contact
+router.put('/:id', extractUserId, express.json(), (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'anonymous';
-    const result = db.prepare('DELETE FROM family_contacts WHERE id = ? AND userId = ?').run(req.params.id, userId);
+    const { name, phone, platform, autoNotify } = req.body;
 
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy liên hệ hoặc không có quyền xóa' });
+    const contact = FamilyContact.findById(req.params.id, req.userId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ hoặc không có quyền chỉnh sửa'
+      });
+    }
+
+    const updates = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (phone !== undefined) updates.phone = phone.trim();
+    if (platform !== undefined) updates.platform = platform;
+    if (autoNotify !== undefined) updates.autoNotify = autoNotify ? 1 : 0;
+
+    const updated = FamilyContact.update(req.params.id, req.userId, updates);
+
+    if (!updated) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không có gì để cập nhật'
+      });
+    }
+
+    const updatedContact = FamilyContact.findById(req.params.id, req.userId);
+    res.json({ success: true, contact: updatedContact, message: 'Cập nhật thành công' });
+  } catch (err) {
+    console.error('[PUT /contacts/:id]', err);
+    res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật liên hệ' });
+  }
+});
+
+// DELETE /api/contacts/:id
+router.delete('/:id', extractUserId, (req, res) => {
+  try {
+    const deleted = FamilyContact.delete(req.params.id, req.userId);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ hoặc không có quyền xóa'
+      });
     }
 
     res.json({ success: true, message: 'Xóa liên hệ thành công' });

@@ -3,6 +3,64 @@
 // The Guardian's Hearth Design System
 // ============================================
 
+const API_BASE = window.location.origin + '/api';
+
+// ============================================
+// API CLIENT
+// ============================================
+class ApiClient {
+  constructor() {
+    this.userId = this.getOrCreateUserId();
+  }
+
+  getOrCreateUserId() {
+    let id = localStorage.getItem('userId');
+    if (!id) {
+      id = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem('userId', id);
+    }
+    return id;
+  }
+
+  get headers() {
+    return { 'x-user-id': this.userId };
+  }
+
+  async post(endpoint, body) {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { ...this.headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+
+  async postFile(endpoint, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: this.headers,
+      body: formData
+    });
+    return res.json();
+  }
+
+  async get(endpoint) {
+    const res = await fetch(`${API_BASE}${endpoint}`, { headers: this.headers });
+    return res.json();
+  }
+
+  async delete(endpoint) {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'DELETE',
+      headers: this.headers
+    });
+    return res.json();
+  }
+}
+
 // ============================================
 // NAVIGATION & ROUTING
 // ============================================
@@ -14,19 +72,38 @@ class Router {
 
   getCurrentPage() {
     const path = window.location.pathname;
-    if (path.includes('home.html') || path === '/' || path === '/index.html') return 'home';
-    if (path.includes('detectResult.html')) return 'detect';
-    if (path.includes('education.html')) return 'education';
-    if (path.includes('familyContact.html')) return 'family';
+    const map = {
+      home: ['home.html', '/', '/index.html', '/home'],
+      detect: ['detectResult.html', '/detect'],
+      education: ['education.html', '/education'],
+      family: ['familyContact.html', '/family']
+    };
+
+    for (const [page, paths] of Object.entries(map)) {
+      if (paths.some(p => path.endsWith(p) || path === p)) return page;
+    }
     return 'home';
   }
 
   initNavigation() {
-    // Update active nav state
     const navLinks = document.querySelectorAll('nav a');
+    const pageHrefMap = {
+      home: 'home.html',
+      detect: 'detectResult.html',
+      education: 'education.html',
+      family: 'familyContact.html'
+    };
+
     navLinks.forEach(link => {
       const href = link.getAttribute('href');
-      if (href && href.includes(this.currentPage)) {
+      if (!href) return;
+
+      // Check if this link matches current page
+      const isActive = Object.entries(pageHrefMap).some(([page, file]) => {
+        return page === this.currentPage && href.includes(file);
+      });
+
+      if (isActive) {
         link.classList.add('text-primary', 'border-b-4', 'border-primary');
         link.classList.remove('text-on-surface-variant');
       }
@@ -40,10 +117,7 @@ class Router {
       education: 'education.html',
       family: 'familyContact.html'
     };
-
-    if (pages[page]) {
-      window.location.href = pages[page];
-    }
+    if (pages[page]) window.location.href = pages[page];
   }
 }
 
@@ -51,7 +125,8 @@ class Router {
 // FILE UPLOAD & DETECTION
 // ============================================
 class DetectionHandler {
-  constructor() {
+  constructor(api) {
+    this.api = api;
     this.supportedFormats = {
       video: ['mp4', 'avi', 'mov', 'webm'],
       image: ['jpg', 'jpeg', 'png', 'webp'],
@@ -59,29 +134,32 @@ class DetectionHandler {
     };
   }
 
-  handleVideoUpload(file) {
-    if (!this.validateFile(file, 'video')) {
-      this.showError('Định dạng video không được hỗ trợ. Vui lòng chọn file MP4, AVI, MOV hoặc WEBM.');
+  async handleVideoUpload(file) {
+    if (!this.validateFile(file, file.type.startsWith('video/') ? 'video' : 'image')) {
+      this.showError('Định dạng không được hỗ trợ. Vui lòng chọn file MP4, AVI, MOV, WEBM, JPG, PNG.');
       return;
     }
 
-    this.showLoading('Đang phân tích video...');
+    this.showLoading('Đang phân tích video/ảnh...');
 
-    // Simulate detection process
-    setTimeout(() => {
-      this.saveDetectionResult({
-        type: 'video',
-        fileName: file.name,
-        timestamp: new Date().toISOString(),
-        riskLevel: 'high', // 'low', 'medium', 'high'
-        confidence: 85
-      });
+    try {
+      const result = await this.api.postFile('/detect/video', file);
 
-      window.location.href = 'detectResult.html';
-    }, 2000);
+      if (result.success) {
+        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        window.location.href = 'detectResult.html';
+      } else {
+        this.hideLoading();
+        this.showError(result.message || 'Lỗi khi phân tích');
+      }
+    } catch (err) {
+      this.hideLoading();
+      // Fallback to local simulation if server is down
+      this.fallbackLocal('video', file.name);
+    }
   }
 
-  handleAudioUpload(file) {
+  async handleAudioUpload(file) {
     if (!this.validateFile(file, 'audio')) {
       this.showError('Định dạng âm thanh không được hỗ trợ. Vui lòng chọn file MP3, WAV hoặc OGG.');
       return;
@@ -89,20 +167,23 @@ class DetectionHandler {
 
     this.showLoading('Đang phân tích giọng nói...');
 
-    setTimeout(() => {
-      this.saveDetectionResult({
-        type: 'audio',
-        fileName: file.name,
-        timestamp: new Date().toISOString(),
-        riskLevel: 'medium',
-        confidence: 72
-      });
+    try {
+      const result = await this.api.postFile('/detect/audio', file);
 
-      window.location.href = 'detectResult.html';
-    }, 2000);
+      if (result.success) {
+        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        window.location.href = 'detectResult.html';
+      } else {
+        this.hideLoading();
+        this.showError(result.message || 'Lỗi khi phân tích');
+      }
+    } catch (err) {
+      this.hideLoading();
+      this.fallbackLocal('audio', file.name);
+    }
   }
 
-  handleLinkCheck(url) {
+  async handleLinkCheck(url) {
     if (!this.validateURL(url)) {
       this.showError('Đường dẫn không hợp lệ. Vui lòng nhập URL đầy đủ (ví dụ: https://youtube.com/...)');
       return;
@@ -110,40 +191,52 @@ class DetectionHandler {
 
     this.showLoading('Đang kiểm tra đường dẫn...');
 
-    setTimeout(() => {
-      this.saveDetectionResult({
-        type: 'link',
-        url: url,
-        timestamp: new Date().toISOString(),
-        riskLevel: 'low',
-        confidence: 45
-      });
-
-      window.location.href = 'detectResult.html';
-    }, 1500);
-  }
-
-  validateFile(file, type) {
-    const extension = file.name.split('.').pop().toLowerCase();
-    return this.supportedFormats[type].includes(extension);
-  }
-
-  validateURL(url) {
     try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+      const result = await this.api.post('/detect/link', { url });
+
+      if (result.success) {
+        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        window.location.href = 'detectResult.html';
+      } else {
+        this.hideLoading();
+        this.showError(result.message || 'Lỗi khi kiểm tra');
+      }
+    } catch (err) {
+      this.hideLoading();
+      this.fallbackLocal('link', null, url);
     }
   }
 
-  saveDetectionResult(result) {
-    localStorage.setItem('latestDetection', JSON.stringify(result));
+  // Fallback when server is not available
+  fallbackLocal(type, fileName, url) {
+    const risks = ['low', 'medium', 'high'];
+    const riskLevel = risks[Math.floor(Math.random() * risks.length)];
+    const confidence = Math.floor(Math.random() * 40) + 60;
 
-    // Add to history
-    const history = this.getDetectionHistory();
-    history.unshift(result);
-    localStorage.setItem('detectionHistory', JSON.stringify(history.slice(0, 20))); // Keep last 20
+    const result = {
+      id: 'local_' + Date.now(),
+      type,
+      fileName: fileName || null,
+      url: url || null,
+      riskLevel,
+      confidence,
+      details: `Phân tích offline (server không khả dụng). Mức rủi ro: ${riskLevel}.`,
+      createdAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('latestDetection', JSON.stringify(result));
+    window.location.href = 'detectResult.html';
+  }
+
+  async getHistory(limit = 20, offset = 0) {
+    try {
+      return await this.api.get(`/detect/history?limit=${limit}&offset=${offset}`);
+    } catch {
+      // Fallback to localStorage
+      const data = localStorage.getItem('detectionHistory');
+      const detections = data ? JSON.parse(data) : [];
+      return { success: true, detections, total: detections.length };
+    }
   }
 
   getLatestDetection() {
@@ -151,18 +244,21 @@ class DetectionHandler {
     return data ? JSON.parse(data) : null;
   }
 
-  getDetectionHistory() {
-    const data = localStorage.getItem('detectionHistory');
-    return data ? JSON.parse(data) : [];
+  validateFile(file, type) {
+    const extension = file.name.split('.').pop().toLowerCase();
+    return this.supportedFormats[type]?.includes(extension);
+  }
+
+  validateURL(url) {
+    try { new URL(url); return true; } catch { return false; }
   }
 
   showLoading(message) {
-    // Create loading overlay
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
-    overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center';
+    overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in';
     overlay.innerHTML = `
-      <div class="card-lowest card-base text-center max-w-md">
+      <div class="card-lowest card-base text-center max-w-md animate-scale-up">
         <div class="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
         <p class="title-md text-on-surface">${message}</p>
         <p class="body-md text-on-surface-variant mt-2">Vui lòng đợi trong giây lát...</p>
@@ -196,48 +292,67 @@ class DetectionHandler {
 // FAMILY CONTACT MANAGEMENT
 // ============================================
 class FamilyContactManager {
-  constructor() {
-    this.contacts = this.loadContacts();
+  constructor(api) {
+    this.api = api;
+    this.contacts = [];
   }
 
-  loadContacts() {
-    const data = localStorage.getItem('familyContacts');
-    return data ? JSON.parse(data) : [];
+  async loadContacts() {
+    try {
+      const result = await this.api.get('/contacts');
+      if (result.success) {
+        this.contacts = result.contacts;
+        return this.contacts;
+      }
+    } catch {
+      // Fallback to localStorage
+      const data = localStorage.getItem('familyContacts');
+      this.contacts = data ? JSON.parse(data) : [];
+    }
+    return this.contacts;
   }
 
-  saveContacts() {
-    localStorage.setItem('familyContacts', JSON.stringify(this.contacts));
-  }
-
-  addContact(name, phone) {
+  async addContact(name, phone) {
     if (!name || !phone) {
       return { success: false, message: 'Vui lòng điền đầy đủ thông tin' };
     }
 
     if (!this.validatePhone(phone)) {
-      return { success: false, message: 'Số điện thoại không hợp lệ' };
+      return { success: false, message: 'Số điện thoại không hợp lệ (ví dụ: 0901234567)' };
     }
 
-    const contact = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      phone: phone.trim(),
-      createdAt: new Date().toISOString()
-    };
-
-    this.contacts.push(contact);
-    this.saveContacts();
-
-    return { success: true, message: 'Đã lưu thông tin liên hệ', contact };
+    try {
+      const result = await this.api.post('/contacts', { name: name.trim(), phone: phone.trim() });
+      if (result.success) {
+        this.contacts.push(result.contact);
+        // Also save to localStorage as backup
+        localStorage.setItem('familyContacts', JSON.stringify(this.contacts));
+      }
+      return result;
+    } catch {
+      // Fallback to localStorage
+      const contact = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        phone: phone.trim(),
+        createdAt: new Date().toISOString()
+      };
+      this.contacts.push(contact);
+      localStorage.setItem('familyContacts', JSON.stringify(this.contacts));
+      return { success: true, message: 'Đã lưu thông tin liên hệ (offline)', contact };
+    }
   }
 
-  removeContact(id) {
+  async removeContact(id) {
+    try {
+      await this.api.delete(`/contacts/${id}`);
+    } catch { /* ignore */ }
+
     this.contacts = this.contacts.filter(c => c.id !== id);
-    this.saveContacts();
+    localStorage.setItem('familyContacts', JSON.stringify(this.contacts));
   }
 
   validatePhone(phone) {
-    // Vietnamese phone number validation
     const cleaned = phone.replace(/\s/g, '');
     return /^(0|\+84)[0-9]{9,10}$/.test(cleaned);
   }
@@ -254,23 +369,20 @@ class FamilyContactManager {
     if (!this.getAutoNotifyEnabled()) return;
     if (this.contacts.length === 0) return;
 
-    // Simulate sending notifications
-    console.log('Sending notifications to:', this.contacts);
-    console.log('Detection result:', detectionResult);
+    // In production: call backend API to send Zalo/Telegram messages
+    console.log('[Notify] Sending to:', this.contacts.map(c => c.name));
 
-    // In production, this would call an API to send Zalo/Telegram messages
     this.showNotificationSent();
   }
 
   showNotificationSent() {
     const toast = document.createElement('div');
-    toast.className = 'fixed top-32 right-6 z-50 alert-success max-w-md';
+    toast.className = 'fixed top-32 right-6 z-50 alert-success max-w-md animate-slide-in';
     toast.innerHTML = `
       <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
       <p class="text-on-secondary-container text-base">Đã gửi thông báo cho người thân</p>
     `;
     document.body.appendChild(toast);
-
     setTimeout(() => toast.remove(), 3000);
   }
 }
@@ -282,22 +394,22 @@ class VoiceAssistant {
   constructor() {
     this.synthesis = window.speechSynthesis;
     this.isSupported = 'speechSynthesis' in window;
+    this.isSpeaking = false;
   }
 
   speak(text) {
-    if (!this.isSupported) {
-      console.warn('Speech synthesis not supported');
-      return;
-    }
+    if (!this.isSupported) return;
 
-    // Cancel any ongoing speech
     this.synthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'vi-VN';
-    utterance.rate = 0.85; // Slower for seniors
+    utterance.rate = 0.85;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
+
+    utterance.onstart = () => { this.isSpeaking = true; };
+    utterance.onend = () => { this.isSpeaking = false; };
 
     this.synthesis.speak(utterance);
   }
@@ -305,27 +417,19 @@ class VoiceAssistant {
   stop() {
     if (this.isSupported) {
       this.synthesis.cancel();
+      this.isSpeaking = false;
     }
   }
 
   readDetectionResult(result) {
-    let message = '';
+    const riskMap = {
+      high: `Cảnh báo nghiêm trọng! Chúng tôi phát hiện dấu hiệu lừa đảo rất cao. Độ tin cậy ${result.confidence} phần trăm. Vui lòng không thực hiện bất kỳ giao dịch nào và liên hệ con cháu ngay lập tức.`,
+      medium: `Cảnh báo! Phát hiện dấu hiệu nghi ngờ. Độ tin cậy ${result.confidence} phần trăm. Hãy cẩn thận và kiểm tra kỹ trước khi tiếp tục.`,
+      low: `Kết quả kiểm tra cho thấy mức độ rủi ro thấp. Độ tin cậy ${result.confidence} phần trăm. Tuy nhiên, vẫn nên thận trọng với mọi giao dịch trực tuyến.`
+    };
 
-    if (result.riskLevel === 'high') {
-      message = `Cảnh báo! Chúng tôi phát hiện dấu hiệu lừa đảo nghiêm trọng.
-                 Độ tin cậy ${result.confidence} phần trăm.
-                 Vui lòng không thực hiện bất kỳ giao dịch nào và liên hệ con cháu ngay lập tức.`;
-    } else if (result.riskLevel === 'medium') {
-      message = `Cảnh báo! Có dấu hiệu nghi ngờ.
-                 Độ tin cậy ${result.confidence} phần trăm.
-                 Hãy cẩn thận và kiểm tra kỹ trước khi tiếp tục.`;
-    } else {
-      message = `Kết quả kiểm tra: Mức độ rủi ro thấp.
-                 Độ tin cậy ${result.confidence} phần trăm.
-                 Tuy nhiên, vẫn nên thận trọng với mọi giao dịch trực tuyến.`;
-    }
-
-    this.speak(message);
+    const details = result.details ? ` Chi tiết: ${result.details}` : '';
+    this.speak((riskMap[result.riskLevel] || riskMap.medium) + details);
   }
 }
 
@@ -337,17 +441,16 @@ class EmergencyHandler {
     this.emergencyNumbers = {
       police: '113',
       ambulance: '115',
-      fire: '114',
-      family: null // Will be set from contacts
+      fire: '114'
     };
   }
 
   showEmergencyDialog() {
     const dialog = document.createElement('div');
     dialog.id = 'emergency-dialog';
-    dialog.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6';
+    dialog.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in';
     dialog.innerHTML = `
-      <div class="card-error card-base max-w-lg w-full">
+      <div class="card-error card-base max-w-lg w-full animate-scale-up">
         <div class="flex items-center gap-4 mb-6">
           <span class="material-symbols-outlined icon-lg text-on-error-container" style="font-variation-settings: 'FILL' 1;">emergency</span>
           <h2 class="title-lg text-on-error-container">Cuộc Gọi Khẩn Cấp</h2>
@@ -366,12 +469,18 @@ class EmergencyHandler {
             Gọi Người Thân
           </button>
 
-          <button onclick="app.emergency.closeDialog()" class="btn-outline w-full">
+          <button onclick="app.emergency.closeDialog()" class="btn-outline w-full bg-white">
             Hủy
           </button>
         </div>
       </div>
     `;
+
+    // Close on backdrop click
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) this.closeDialog();
+    });
+
     document.body.appendChild(dialog);
   }
 
@@ -381,18 +490,17 @@ class EmergencyHandler {
   }
 
   call(type) {
-    const number = this.emergencyNumbers[type];
-
     if (type === 'family') {
       const contacts = app.familyContact.contacts;
       if (contacts.length === 0) {
-        alert('Chưa có số điện thoại người thân. Vui lòng thêm trong mục "Kết Nối Với Người Thân".');
+        this.closeDialog();
+        app.detection.showError('Chưa có số điện thoại người thân. Vui lòng thêm trong mục "Kết Nối Với Người Thân".');
         return;
       }
-      // Call first contact
       window.location.href = `tel:${contacts[0].phone}`;
     } else {
-      window.location.href = `tel:${number}`;
+      const number = this.emergencyNumbers[type];
+      if (number) window.location.href = `tel:${number}`;
     }
 
     this.closeDialog();
@@ -400,21 +508,92 @@ class EmergencyHandler {
 }
 
 // ============================================
+// RESULT PAGE RENDERER
+// ============================================
+class ResultRenderer {
+  constructor() {}
+
+  updateResultPage(result) {
+    if (!result) return;
+
+    // Update gauge
+    this.updateGauge(result.riskLevel);
+
+    // Update warning text based on actual result
+    this.updateWarning(result);
+  }
+
+  updateGauge(riskLevel) {
+    const indicator = document.querySelector('.gauge-indicator-wrapper');
+    if (!indicator) return;
+
+    const positions = { low: '15%', medium: '50%', high: '85%' };
+    indicator.style.left = positions[riskLevel] || '50%';
+    indicator.style.transition = 'left 1s cubic-bezier(0.16, 1, 0.3, 1)';
+  }
+
+  updateWarning(result) {
+    // Update warning title
+    const warningTitle = document.querySelector('.title-lg.text-error');
+    if (warningTitle) {
+      const titles = {
+        high: 'CẢNH BÁO: PHÁT HIỆN DẤU HIỆU LỪA ĐẢO',
+        medium: 'CHÚ Ý: CÓ DẤU HIỆU NGHI NGỜ',
+        low: 'AN TOÀN: KHÔNG PHÁT HIỆN MỐI ĐE DỌA'
+      };
+      warningTitle.textContent = titles[result.riskLevel] || titles.medium;
+
+      // Adjust color for safe results
+      if (result.riskLevel === 'low') {
+        warningTitle.classList.remove('text-error');
+        warningTitle.classList.add('text-secondary');
+      }
+    }
+
+    // Update warning detail
+    const warningDetail = warningTitle?.parentElement?.querySelector('.body-lg');
+    if (warningDetail && result.details) {
+      warningDetail.textContent = result.details;
+    }
+
+    // Update warning icon
+    const warningIcon = document.querySelector('.card-error .material-symbols-outlined');
+    if (warningIcon) {
+      if (result.riskLevel === 'low') {
+        warningIcon.textContent = 'check_circle';
+        const container = warningIcon.closest('.card-error');
+        if (container) {
+          container.classList.remove('card-error');
+          container.classList.add('card-secondary');
+        }
+      }
+    }
+  }
+}
+
+// ============================================
 // GLOBAL APP INSTANCE
 // ============================================
 const app = {
+  api: null,
   router: null,
   detection: null,
   familyContact: null,
   voice: null,
   emergency: null,
+  resultRenderer: null,
 
-  init() {
+  async init() {
+    this.api = new ApiClient();
     this.router = new Router();
-    this.detection = new DetectionHandler();
-    this.familyContact = new FamilyContactManager();
+    this.detection = new DetectionHandler(this.api);
+    this.familyContact = new FamilyContactManager(this.api);
     this.voice = new VoiceAssistant();
     this.emergency = new EmergencyHandler();
+    this.resultRenderer = new ResultRenderer();
+
+    // Load contacts from server
+    await this.familyContact.loadContacts();
 
     this.initEventListeners();
     this.initPageSpecific();
@@ -422,21 +601,30 @@ const app = {
 
   initEventListeners() {
     // Emergency button (on all pages)
-    const emergencyBtn = document.querySelector('button.btn-error');
-    if (emergencyBtn && emergencyBtn.textContent.includes('Emergency')) {
-      emergencyBtn.addEventListener('click', () => this.emergency.showEmergencyDialog());
+    const emergencyBtn = document.querySelector('nav button.btn-error');
+    if (emergencyBtn) {
+      emergencyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.emergency.showEmergencyDialog();
+      });
     }
+
+    // Keyboard shortcut: Escape to close dialogs
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.emergency.closeDialog();
+        this.voice.stop();
+      }
+    });
   },
 
   initPageSpecific() {
     const page = this.router.currentPage;
 
-    if (page === 'home') {
-      this.initHomePage();
-    } else if (page === 'detect') {
-      this.initDetectResultPage();
-    } else if (page === 'family') {
-      this.initFamilyContactPage();
+    switch (page) {
+      case 'home': this.initHomePage(); break;
+      case 'detect': this.initDetectResultPage(); break;
+      case 'family': this.initFamilyContactPage(); break;
     }
   },
 
@@ -450,13 +638,7 @@ const app = {
         input.accept = 'video/*,image/*';
         input.onchange = (e) => {
           const file = e.target.files[0];
-          if (file) {
-            if (file.type.startsWith('video/')) {
-              this.detection.handleVideoUpload(file);
-            } else {
-              this.detection.handleVideoUpload(file); // Same handler for now
-            }
-          }
+          if (file) this.detection.handleVideoUpload(file);
         };
         input.click();
       });
@@ -479,18 +661,25 @@ const app = {
 
     // Link check
     const linkInput = document.querySelector('input[placeholder*="Dán link"]');
-    const linkBtn = document.querySelector('button.btn-primary');
+    const linkBtn = linkInput?.parentElement?.querySelector('button');
     if (linkInput && linkBtn) {
-      linkBtn.addEventListener('click', () => {
+      const checkLink = () => {
         const url = linkInput.value.trim();
         if (url) this.detection.handleLinkCheck(url);
-      });
+        else this.detection.showError('Vui lòng nhập đường dẫn');
+      };
 
+      linkBtn.addEventListener('click', checkLink);
       linkInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          const url = linkInput.value.trim();
-          if (url) this.detection.handleLinkCheck(url);
-        }
+        if (e.key === 'Enter') checkLink();
+      });
+    }
+
+    // "Gửi cho con cháu" button
+    const sendFamilyBtn = document.querySelector('button.btn-outline');
+    if (sendFamilyBtn && sendFamilyBtn.textContent.includes('CON CHÁU')) {
+      sendFamilyBtn.addEventListener('click', () => {
+        this.router.navigateTo('family');
       });
     }
   },
@@ -502,48 +691,63 @@ const app = {
       return;
     }
 
-    // Update gauge position based on risk level
-    this.updateGauge(result.riskLevel);
+    // Render result data
+    this.resultRenderer.updateResultPage(result);
 
     // Voice assistant button
     const voiceBtn = document.querySelector('button.bg-primary');
     if (voiceBtn && voiceBtn.textContent.includes('giọng nói')) {
       voiceBtn.addEventListener('click', () => {
-        this.voice.readDetectionResult(result);
+        if (this.voice.isSpeaking) {
+          this.voice.stop();
+        } else {
+          this.voice.readDetectionResult(result);
+        }
       });
     }
 
-    // Share buttons
+    // Share buttons (Zalo / Telegram)
     const shareButtons = document.querySelectorAll('button[class*="card-medium"]');
     shareButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.shareResult(result);
-      });
+      btn.addEventListener('click', () => this.shareResult(result));
     });
 
-    // Auto-notify family if enabled
+    // "Kiểm tra lại" button
+    const retryBtn = document.querySelector('button.btn-outline');
+    if (retryBtn && retryBtn.textContent.includes('Kiểm tra lại')) {
+      retryBtn.addEventListener('click', () => {
+        window.location.href = 'home.html';
+      });
+    }
+
+    // "Xem lịch sử" button
+    const historyBtn = document.querySelector('button.card-high');
+    if (historyBtn && historyBtn.textContent.includes('lịch sử')) {
+      historyBtn.addEventListener('click', () => this.showHistoryModal());
+    }
+
+    // Auto-notify family
     if (result.riskLevel === 'high' || result.riskLevel === 'medium') {
       this.familyContact.notifyContacts(result);
     }
   },
 
-  initFamilyContactPage() {
-    // Contact form
+  async initFamilyContactPage() {
     const nameInput = document.querySelector('input[placeholder*="tên người thân"]');
     const phoneInput = document.querySelector('input[placeholder*="090"]');
     const saveBtn = document.querySelector('button.btn-primary');
 
     if (saveBtn && nameInput && phoneInput) {
-      saveBtn.addEventListener('click', () => {
-        const result = this.familyContact.addContact(
-          nameInput.value,
-          phoneInput.value
-        );
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        const result = await this.familyContact.addContact(nameInput.value, phoneInput.value);
+        saveBtn.disabled = false;
 
         if (result.success) {
           nameInput.value = '';
           phoneInput.value = '';
           this.showSuccess(result.message);
+          this.renderContactList();
         } else {
           this.detection.showError(result.message);
         }
@@ -556,48 +760,139 @@ const app = {
       toggle.checked = this.familyContact.getAutoNotifyEnabled();
       toggle.addEventListener('change', (e) => {
         this.familyContact.setAutoNotifyEnabled(e.target.checked);
+        this.showSuccess(e.target.checked ? 'Đã bật tự động thông báo' : 'Đã tắt tự động thông báo');
       });
     }
+
+    // Render existing contacts
+    this.renderContactList();
   },
 
-  updateGauge(riskLevel) {
-    const indicator = document.querySelector('.gauge-indicator-wrapper');
-    if (!indicator) return;
+  renderContactList() {
+    const contacts = this.familyContact.contacts;
+    let listContainer = document.getElementById('contact-list');
 
-    const positions = {
-      low: '15%',
-      medium: '50%',
-      high: '85%'
-    };
+    if (!listContainer) {
+      // Create contact list container after save button
+      const saveBtn = document.querySelector('button.btn-primary');
+      if (!saveBtn) return;
 
-    indicator.style.left = positions[riskLevel] || '50%';
+      listContainer = document.createElement('div');
+      listContainer.id = 'contact-list';
+      listContainer.className = 'mt-8';
+      saveBtn.parentElement.appendChild(listContainer);
+    }
+
+    if (contacts.length === 0) {
+      listContainer.innerHTML = `
+        <p class="body-md text-on-surface-variant text-center py-4">Chưa có người thân nào được thêm</p>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = `
+      <h3 class="title-md mb-4">Danh sách người thân (${contacts.length})</h3>
+      ${contacts.map(c => `
+        <div class="card-low card-base flex items-center justify-between mb-3 p-4" data-id="${c.id}">
+          <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-primary icon-sm" style="font-variation-settings: 'FILL' 1;">person</span>
+            <div>
+              <p class="font-bold text-on-surface">${c.name}</p>
+              <p class="body-md text-on-surface-variant">${c.phone}</p>
+            </div>
+          </div>
+          <button class="touch-target text-error hover:bg-error-container rounded-xl transition-colors"
+                  onclick="app.deleteContact('${c.id}')">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
+      `).join('')}
+    `;
+  },
+
+  async deleteContact(id) {
+    await this.familyContact.removeContact(id);
+    this.renderContactList();
+    this.showSuccess('Đã xóa liên hệ');
+  },
+
+  async showHistoryModal() {
+    const historyData = await this.detection.getHistory();
+    const detections = historyData.detections || [];
+
+    const modal = document.createElement('div');
+    modal.id = 'history-modal';
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in';
+
+    const riskColors = { high: 'text-error', medium: 'text-tertiary-fixed-dim', low: 'text-secondary' };
+    const riskLabels = { high: 'Nguy hiểm', medium: 'Nghi ngờ', low: 'An toàn' };
+    const typeLabels = { video: 'Video/Ảnh', audio: 'Giọng nói', link: 'Đường dẫn' };
+
+    modal.innerHTML = `
+      <div class="card-lowest card-base max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col animate-scale-up">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="title-lg">Lịch sử phân tích</h2>
+          <button onclick="document.getElementById('history-modal').remove()" class="touch-target hover:bg-surface-container-high rounded-xl transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto flex-1 space-y-3">
+          ${detections.length === 0
+            ? '<p class="body-lg text-on-surface-variant text-center py-8">Chưa có lịch sử phân tích</p>'
+            : detections.map(d => `
+              <div class="card-low card-base p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl ${d.riskLevel === 'high' ? 'bg-error-container' : d.riskLevel === 'medium' ? 'bg-tertiary-fixed' : 'bg-secondary-container'} flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined ${riskColors[d.riskLevel]}" style="font-variation-settings: 'FILL' 1;">
+                    ${d.riskLevel === 'high' ? 'warning' : d.riskLevel === 'medium' ? 'help' : 'check_circle'}
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-on-surface truncate">${typeLabels[d.type] || d.type} — ${riskLabels[d.riskLevel]}</p>
+                  <p class="body-md text-on-surface-variant truncate">${d.fileName || d.url || 'N/A'}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="font-bold ${riskColors[d.riskLevel]}">${d.confidence}%</p>
+                  <p class="text-sm text-on-surface-variant">${new Date(d.createdAt).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+      </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+
+    document.body.appendChild(modal);
   },
 
   shareResult(result) {
-    const message = `SafeGuard Senior - Kết quả phân tích:\nMức độ rủi ro: ${result.riskLevel}\nĐộ tin cậy: ${result.confidence}%`;
+    const riskLabels = { high: 'Nguy hiểm', medium: 'Nghi ngờ', low: 'An toàn' };
+    const message = `SafeGuard Senior - Kết quả phân tích:\nMức độ rủi ro: ${riskLabels[result.riskLevel]}\nĐộ tin cậy: ${result.confidence}%\n${result.details || ''}`;
 
     if (navigator.share) {
-      navigator.share({
-        title: 'SafeGuard Senior - Cảnh báo',
-        text: message
-      });
+      navigator.share({ title: 'SafeGuard Senior - Cảnh báo', text: message });
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(message);
-      this.showSuccess('Đã sao chép kết quả');
+      navigator.clipboard?.writeText(message);
+      this.showSuccess('Đã sao chép kết quả vào clipboard');
     }
   },
 
   showSuccess(message) {
     const toast = document.createElement('div');
-    toast.className = 'fixed top-32 right-6 z-50 alert-success max-w-md';
+    toast.className = 'fixed top-32 right-6 z-50 alert-success max-w-md animate-slide-in';
     toast.innerHTML = `
       <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
       <p class="text-on-secondary-container text-base">${message}</p>
     `;
     document.body.appendChild(toast);
-
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => {
+      toast.classList.add('animate-slide-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 };
 
@@ -608,5 +903,4 @@ if (document.readyState === 'loading') {
   app.init();
 }
 
-// Export for global access
 window.app = app;

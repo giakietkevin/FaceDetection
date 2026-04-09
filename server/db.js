@@ -4,12 +4,20 @@ const path = require('path');
 const dbPath = path.join(__dirname, '../data/safeguard.db');
 const db = new Database(dbPath);
 
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+// Foreign keys off — no real auth yet; userId is a client-generated string
+// Enable WAL mode for better concurrent read performance
+db.pragma('journal_mode = WAL');
 
 // Initialize database schema
 function initializeDatabase() {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT,
+      createdAt TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS detections (
       id TEXT PRIMARY KEY,
       userId TEXT NOT NULL,
@@ -19,14 +27,6 @@ function initializeDatabase() {
       riskLevel TEXT NOT NULL,
       confidence INTEGER NOT NULL,
       details TEXT,
-      createdAt TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES users(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      phone TEXT,
       createdAt TEXT NOT NULL
     );
 
@@ -37,8 +37,7 @@ function initializeDatabase() {
       phone TEXT NOT NULL,
       platform TEXT,
       autoNotify INTEGER DEFAULT 1,
-      createdAt TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES users(id)
+      createdAt TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS detection_history (
@@ -46,9 +45,7 @@ function initializeDatabase() {
       userId TEXT NOT NULL,
       detectionId TEXT NOT NULL,
       action TEXT,
-      timestamp TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES users(id),
-      FOREIGN KEY (detectionId) REFERENCES detections(id)
+      timestamp TEXT NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_detections_userId ON detections(userId);

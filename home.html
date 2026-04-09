@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 
-<html lang="vi"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>SafeGuard Senior - Bảo vệ niềm tin</title>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles/output.css"/>
-<style>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SafeGuard Senior - Bảo vệ niềm tin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles/output.css" />
+    <style>
         /* Hero Action Buttons */
         .hero-action-btn {
             min-height: 400px;
@@ -21,121 +26,142 @@
             text-align: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
+
         .hero-action-btn:active {
             transform: scale(0.98);
         }
+
         .hero-action-btn:hover {
             box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
+
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
-<!-- TopNavBar with Glassmorphism -->
-<nav class="glass-nav fixed top-0 w-full z-50 h-24">
-<div class="flex justify-between items-center px-12 h-full max-w-screen-2xl mx-auto w-full">
-<div class="text-3xl font-black text-primary uppercase tracking-tighter">SafeGuard Senior</div>
-<div class="hidden md:flex gap-12">
-<a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer" href="home.html">Home</a>
-<a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer" href="detectResult.html">Detect</a>
-<a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer" href="education.html">Help</a>
-</div>
-<button class="btn-error touch-target">
+    <!-- TopNavBar with Glassmorphism -->
+    <nav class="glass-nav fixed top-0 w-full z-50 h-24">
+        <div class="flex justify-between items-center px-12 h-full max-w-screen-2xl mx-auto w-full">
+            <div class="text-3xl font-black text-primary uppercase tracking-tighter">Face Detection</div>
+            <div class="hidden md:flex gap-12">
+                <a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer"
+                    href="home.html">Home</a>
+                <a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer"
+                    href="detectResult.html">Detect</a>
+                <a class="text-on-surface-variant font-medium pb-2 hover:text-primary transition-colors active:scale-95 duration-150 cursor-pointer"
+                    href="education.html">Help</a>
+            </div>
+            <button class="btn-error touch-target">
                 Emergency Call
             </button>
-</div>
-</nav>
-<!-- Main Content Canvas -->
-<main class="flex-grow pt-32 pb-16 px-6 md:px-12 max-w-screen-xl mx-auto w-full">
-<!-- Large Editorial Header -->
-<header class="breathing-space-xl text-center md:text-left">
-<h1 class="display-lg text-primary mb-6">
-                SafeGuard Senior: <br/>
-<span class="text-secondary">Bảo vệ niềm tin, giữ gìn hạnh phúc.</span>
-</h1>
-<p class="title-md text-on-surface-variant max-w-3xl">
+        </div>
+    </nav>
+    <!-- Main Content Canvas -->
+    <main class="flex-grow pt-32 pb-16 px-6 md:px-12 max-w-screen-xl mx-auto w-full">
+        <!-- Large Editorial Header -->
+        <header class="breathing-space-xl text-center md:text-left">
+            <h1 class="display-lg text-primary mb-6">
+                SafeGuard Senior: <br />
+                <span class="text-secondary">Bảo vệ niềm tin, giữ gìn hạnh phúc.</span>
+            </h1>
+            <p class="title-md text-on-surface-variant max-w-3xl">
                 Giải pháp an toàn giúp Ông Bà và Cha Mẹ nhận diện lừa đảo công nghệ cao một cách dễ dàng nhất.
             </p>
-</header>
-<!-- Ultra-Simplified UI Action Buttons -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 breathing-space-xl">
-<!-- Big Action 1: Video/Photo -->
-<button class="hero-action-btn signature-gradient group text-white">
-<div class="bg-white/10 p-8 rounded-full mb-8 group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined icon-lg" style="font-variation-settings: 'FILL' 1;">video_camera_front</span>
-</div>
-<span class="display-md font-black tracking-wide">KIỂM TRA VIDEO / ẢNH</span>
-<p class="mt-4 text-primary-fixed body-lg font-medium">Bấm vào đây để tải lên video hoặc ảnh nghi ngờ</p>
-</button>
-<!-- Big Action 2: Voice -->
-<button class="hero-action-btn card-secondary group">
-<div class="bg-primary/5 p-8 rounded-full mb-8 group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined icon-lg text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">mic</span>
-</div>
-<span class="display-md font-black tracking-wide text-on-secondary-container">KIỂM TRA GIỌNG NÓI</span>
-<p class="mt-4 text-on-secondary-fixed-variant body-lg font-medium">Ghi âm hoặc tải đoạn hội thoại để kiểm tra</p>
-</button>
-</div>
-<!-- Secondary Section: Direct Links -->
-<section class="card-high card-base breathing-space-xl">
-<div class="flex flex-col md:flex-row items-center gap-8">
-<div class="flex-grow w-full">
-<h2 class="title-lg mb-4 flex items-center gap-3">
-<span class="material-symbols-outlined text-primary icon-md">link</span>
+        </header>
+        <!-- Ultra-Simplified UI Action Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 breathing-space-xl">
+            <!-- Big Action 1: Video/Photo -->
+            <button class="hero-action-btn signature-gradient group text-white">
+                <div class="bg-white/10 p-8 rounded-full mb-8 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined icon-lg"
+                        style="font-variation-settings: 'FILL' 1;">video_camera_front</span>
+                </div>
+                <span class="display-md font-black tracking-wide">KIỂM TRA VIDEO / ẢNH</span>
+                <p class="mt-4 text-primary-fixed body-lg font-medium">Bấm vào đây để tải lên video hoặc ảnh nghi ngờ
+                </p>
+            </button>
+            <!-- Big Action 2: Voice -->
+            <button class="hero-action-btn card-secondary group">
+                <div class="bg-primary/5 p-8 rounded-full mb-8 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined icon-lg text-on-secondary-container"
+                        style="font-variation-settings: 'FILL' 1;">mic</span>
+                </div>
+                <span class="display-md font-black tracking-wide text-on-secondary-container">KIỂM TRA GIỌNG NÓI</span>
+                <p class="mt-4 text-on-secondary-fixed-variant body-lg font-medium">Ghi âm hoặc tải đoạn hội thoại để
+                    kiểm tra</p>
+            </button>
+        </div>
+        <!-- Secondary Section: Direct Links -->
+        <section class="card-high card-base breathing-space-xl">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-grow w-full">
+                    <h2 class="title-lg mb-4 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary icon-md">link</span>
                         Dán link trực tiếp
                     </h2>
-<p class="text-on-surface-variant body-lg mb-6">Bạn thấy video lạ trên YouTube, Facebook hay TikTok? Hãy dán đường dẫn vào đây:</p>
-<div class="relative w-full">
-<input class="input-field w-full" placeholder="Dán link tại đây..." type="text"/>
-<button class="btn-primary absolute right-3 top-3 bottom-3">
+                    <p class="text-on-surface-variant body-lg mb-6">Bạn thấy video lạ trên YouTube, Facebook hay TikTok?
+                        Hãy dán đường dẫn vào đây:</p>
+                    <div class="relative w-full">
+                        <input class="input-field w-full" placeholder="Dán link tại đây..." type="text" />
+                        <button class="btn-primary absolute right-3 top-3 bottom-3">
                             KIỂM TRA
                         </button>
-</div>
-</div>
-<div class="flex gap-4">
-<div class="card-lowest card-base p-4">
-<img class="w-12 h-12" alt="YouTube logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV03HyseqfeLuc4H8_Bn5yiF1TNCPLAW8NIizL6va8Bel4X3mbZXhn1-pK0bng0hc2qCXLmddM2nyBLyy3nwbP5SDKM4xsxJk97zPDWQJq_B5yuF8PQs4OkLnaa-IYQyyDYLpw4R9cO-QBWmWyTb3y3PosC6Si9GdPogeZ0dz104cYHHnQUpKwGiU1ABfCujRsthf3TRCd8p3kGG93w2eE_78h4VAbbaeG-M-9by5bZQjZnWKyy1yZOGfc8wzSdoO1wsctPTFRwbye"/>
-</div>
-<div class="card-lowest card-base p-4">
-<img class="w-12 h-12" alt="Facebook logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDah2MmvD4S-cG8d-LVq0EXo8e-h7cWxMxAnvnTI18F6-iXL9XPlnZ4LB-bMt5r8u0f_MLE4jBTGhehAk4IOBGXNNJSMgQg8M9DCDy-b4VH81MiaNTwwOc3hW8N3aeyyvEjYvBeJeacSrxKLdPeN2pPCFSCbX4DxmFuHofPnZF7AWrX_Xxz5pqN7MRKan9zLn14SY47bbcHRjhwLteFbKjWvMrlBGvWY4rUdyE_UbZhgI8Ou2GGZL-tlBG7BncDhaLN26-KzA8KTM9"/>
-</div>
-<div class="card-lowest card-base p-4">
-<img class="w-12 h-12" alt="TikTok logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2qvEFHN2AeIsKi2Q9r4LuJFaf5770XQfYGELgb3V1E3DDsVytiqLBI-XB-oRPFe2Gmip477j8xSinS6IYZ7Qnp5XoJxY1uPHngzXpC7y-Pmds85N-jJYbYy29ELrzKglxj4t2ZJzw7noMN2WfcmjcSn7W2NDHug9lqlH9sQN-s49Wmsfp-noeYtFd1a_EWOFWx0D-s7K5JRgJ3UhhmAfftG3tuP7k1d34RNifBrB09Axskl2xWqlCg0XWoD-ZO7NiAhCC5_NPkBcz"/>
-</div>
-</div>
-</div>
-</section>
-<!-- Friendly Tips Section -->
-<section class="card-primary card-base breathing-space-xl flex flex-col md:flex-row items-center gap-8 border-l-[12px] border-secondary">
-<div class="bg-white/20 p-6 rounded-full">
-<span class="material-symbols-outlined text-6xl text-white" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
-</div>
-<div class="flex-grow">
-<h3 class="title-lg text-white mb-2">Mẹo nhỏ</h3>
-<p class="title-md text-primary-fixed leading-relaxed">
-                    Đừng ngần ngại! <span class="underline decoration-secondary decoration-4 underline-offset-4">Nhờ con cháu kiểm tra hộ chỉ với một nút bấm</span> nếu bạn cảm thấy không chắc chắn.
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="card-lowest card-base p-4">
+                        <img class="w-12 h-12" alt="YouTube logo"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV03HyseqfeLuc4H8_Bn5yiF1TNCPLAW8NIizL6va8Bel4X3mbZXhn1-pK0bng0hc2qCXLmddM2nyBLyy3nwbP5SDKM4xsxJk97zPDWQJq_B5yuF8PQs4OkLnaa-IYQyyDYLpw4R9cO-QBWmWyTb3y3PosC6Si9GdPogeZ0dz104cYHHnQUpKwGiU1ABfCujRsthf3TRCd8p3kGG93w2eE_78h4VAbbaeG-M-9by5bZQjZnWKyy1yZOGfc8wzSdoO1wsctPTFRwbye" />
+                    </div>
+                    <div class="card-lowest card-base p-4">
+                        <img class="w-12 h-12" alt="Facebook logo"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDah2MmvD4S-cG8d-LVq0EXo8e-h7cWxMxAnvnTI18F6-iXL9XPlnZ4LB-bMt5r8u0f_MLE4jBTGhehAk4IOBGXNNJSMgQg8M9DCDy-b4VH81MiaNTwwOc3hW8N3aeyyvEjYvBeJeacSrxKLdPeN2pPCFSCbX4DxmFuHofPnZF7AWrX_Xxz5pqN7MRKan9zLn14SY47bbcHRjhwLteFbKjWvMrlBGvWY4rUdyE_UbZhgI8Ou2GGZL-tlBG7BncDhaLN26-KzA8KTM9" />
+                    </div>
+                    <div class="card-lowest card-base p-4">
+                        <img class="w-12 h-12" alt="TikTok logo"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2qvEFHN2AeIsKi2Q9r4LuJFaf5770XQfYGELgb3V1E3DDsVytiqLBI-XB-oRPFe2Gmip477j8xSinS6IYZ7Qnp5XoJxY1uPHngzXpC7y-Pmds85N-jJYbYy29ELrzKglxj4t2ZJzw7noMN2WfcmjcSn7W2NDHug9lqlH9sQN-s49Wmsfp-noeYtFd1a_EWOFWx0D-s7K5JRgJ3UhhmAfftG3tuP7k1d34RNifBrB09Axskl2xWqlCg0XWoD-ZO7NiAhCC5_NPkBcz" />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Friendly Tips Section -->
+        <section
+            class="card-primary card-base breathing-space-xl flex flex-col md:flex-row items-center gap-8 border-l-[12px] border-secondary">
+            <div class="bg-white/20 p-6 rounded-full">
+                <span class="material-symbols-outlined text-6xl text-white"
+                    style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
+            </div>
+            <div class="flex-grow">
+                <h3 class="title-lg text-white mb-2">Mẹo nhỏ</h3>
+                <p class="title-md text-primary-fixed leading-relaxed">
+                    Đừng ngần ngại! <span class="underline decoration-secondary decoration-4 underline-offset-4">Nhờ con
+                        cháu kiểm tra hộ chỉ với một nút bấm</span> nếu bạn cảm thấy không chắc chắn.
                 </p>
-</div>
-<button class="bg-white text-primary btn-outline whitespace-nowrap">
+            </div>
+            <button class="bg-white text-primary btn-outline whitespace-nowrap">
                 GỬI CHO CON CHÁU
             </button>
-</section>
-</main>
-<!-- Footer -->
-<footer class="bg-surface-container-high w-full py-16 px-12 border-t border-outline-variant/15">
-<div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-screen-2xl mx-auto">
-<div class="flex flex-col gap-4">
-<div class="title-lg font-black text-primary">SafeGuard Senior</div>
-<p class="body-md text-on-surface-variant max-w-md">
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-surface-container-high w-full py-16 px-12 border-t border-outline-variant/15">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-screen-2xl mx-auto">
+            <div class="flex flex-col gap-4">
+                <div class="title-lg font-black text-primary">SafeGuard Senior</div>
+                <p class="body-md text-on-surface-variant max-w-md">
                     © 2024 SafeGuard Senior. All rights reserved. Your privacy and safety are our priority.
                 </p>
-</div>
-<div class="flex gap-8">
-<a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors" href="#">Privacy Policy</a>
-<a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors" href="#">Terms of Service</a>
-<a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors" href="#">Senior Safety Guide</a>
-</div>
-</div>
-</footer>
+            </div>
+            <div class="flex gap-8">
+                <a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors"
+                    href="#">Privacy Policy</a>
+                <a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors"
+                    href="#">Terms of Service</a>
+                <a class="text-on-surface-variant hover:text-primary cursor-pointer body-md transition-colors"
+                    href="#">Senior Safety Guide</a>
+            </div>
+        </div>
+    </footer>
 </body>
 <script src="app.js"></script>
+
 </html>
