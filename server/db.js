@@ -27,6 +27,8 @@ function initializeDatabase() {
       riskLevel TEXT NOT NULL,
       confidence INTEGER NOT NULL,
       details TEXT,
+      explanations TEXT,
+      analysisMetrics TEXT,
       createdAt TEXT NOT NULL
     );
 
@@ -55,5 +57,18 @@ function initializeDatabase() {
 }
 
 initializeDatabase();
+runMigrations();
 
 module.exports = db;
+
+// Run lightweight migrations for existing databases
+function runMigrations() {
+  // Migration 1: Add explanations and analysisMetrics columns (Explainable AI - Q1)
+  const cols = db.pragma('table_info(detections)').map(c => c.name);
+  if (!cols.includes('explanations')) {
+    db.exec('ALTER TABLE detections ADD COLUMN explanations TEXT;');
+  }
+  if (!cols.includes('analysisMetrics')) {
+    db.exec('ALTER TABLE detections ADD COLUMN analysisMetrics TEXT;');
+  }
+}
