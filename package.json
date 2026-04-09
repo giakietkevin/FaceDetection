@@ -1,0 +1,13 @@
+{
+  "name": "safeguard-senior",
+  "version": "1.0.0",
+  "description": "Security solution for seniors - The Guardian's Hearth design system",
+  "scripts": {
+    "dev": "tailwindcss -i ./styles/input.css -o ./styles/output.css --watch",
+    "build": "tailwindcss -i ./styles/input.css -o ./styles/output.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.31"
+  }
+}
