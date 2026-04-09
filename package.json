@@ -2,12 +2,26 @@
   "name": "safeguard-senior",
   "version": "1.0.0",
   "description": "Security solution for seniors - The Guardian's Hearth design system",
+  "main": "server/index.js",
   "scripts": {
-    "dev": "tailwindcss -i ./styles/input.css -o ./styles/output.css --watch",
-    "build": "tailwindcss -i ./styles/input.css -o ./styles/output.css --minify"
+    "start": "node server/index.js",
+    "server": "nodemon server/index.js",
+    "css:dev": "tailwindcss -i ./styles/input.css -o ./styles/output.css --watch",
+    "css:build": "tailwindcss -i ./styles/input.css -o ./styles/output.css --minify",
+    "dev": "concurrently \"npm run server\" \"npm run css:dev\"",
+    "build": "npm run css:build"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.31"
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.1"
   }
 }
