@@ -517,8 +517,16 @@ class VoiceAssistant {
       low: `Kết quả kiểm tra cho thấy mức độ rủi ro thấp. Độ tin cậy ${result.confidence} phần trăm. Tuy nhiên, vẫn nên thận trọng với mọi giao dịch trực tuyến.`
     };
 
-    const details = result.details ? ` Chi tiết: ${result.details}` : '';
-    this.speak((riskMap[result.riskLevel] || riskMap.medium) + details);
+    let textToSpeak = riskMap[result.riskLevel] || riskMap.medium;
+
+    if (result.explanations && result.explanations.length > 0) {
+      const explanationTitles = result.explanations.map(exp => exp.title).join('. ');
+      textToSpeak += ` Các dấu hiệu đáng ngờ bao gồm: ${explanationTitles}.`;
+    } else if (result.details) {
+      textToSpeak += ` Chi tiết: ${result.details}`;
+    }
+
+    this.speak(textToSpeak);
   }
 }
 
