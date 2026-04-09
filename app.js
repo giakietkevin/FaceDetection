@@ -225,6 +225,10 @@ class DetectionHandler {
     const riskLevel = risks[Math.floor(Math.random() * risks.length)];
     const confidence = Math.floor(Math.random() * 40) + 60;
 
+    // Generate fallback explanations based on type and risk
+    const explanations = this.generateFallbackExplanations(type, riskLevel);
+    const analysisMetrics = this.generateFallbackMetrics(type, riskLevel);
+
     const result = {
       id: 'local_' + Date.now(),
       type,
@@ -233,11 +237,62 @@ class DetectionHandler {
       riskLevel,
       confidence,
       details: `Phân tích offline (server không khả dụng). Mức rủi ro: ${riskLevel}.`,
+      explanations,
+      analysisMetrics,
       createdAt: new Date().toISOString()
     };
 
     localStorage.setItem('latestDetection', JSON.stringify(result));
     window.location.href = 'detectResult.html';
+  }
+
+  // Generate fallback explanations for offline mode
+  generateFallbackExplanations(type, riskLevel) {
+    const templates = {
+      video: {
+        high: [
+          { id: 1, title: 'Phân tích offline', description: 'Phát hiện dấu hiệu bất thường trong video. Kết quả chưa được xác minh bởi server.', severity: 'high', icon: 'warning' },
+          { id: 2, title: 'Cần xác minh thêm', description: 'Vui lòng thử lại khi có kết nối mạng để có kết quả chính xác hơn.', severity: 'medium', icon: 'cloud_off' }
+        ],
+        medium: [
+          { id: 1, title: 'Phân tích cơ bản', description: 'Phát hiện một số dấu hiệu đáng lưu ý. Đề nghị kiểm tra lại khi có mạng.', severity: 'medium', icon: 'info' }
+        ],
+        low: [
+          { id: 1, title: 'Không phát hiện bất thường rõ ràng', description: 'Video có vẻ bình thường dựa trên phân tích cơ bản.', severity: 'low', icon: 'check_circle' }
+        ]
+      },
+      audio: {
+        high: [
+          { id: 1, title: 'Phân tích offline', description: 'Giọng nói có dấu hiệu bất thường. Cần xác minh khi có mạng.', severity: 'high', icon: 'warning' }
+        ],
+        medium: [
+          { id: 1, title: 'Phân tích cơ bản', description: 'Một số đặc điểm giọng nói cần kiểm tra thêm.', severity: 'medium', icon: 'info' }
+        ],
+        low: [
+          { id: 1, title: 'Giọng nói có vẻ bình thường', description: 'Không phát hiện dấu hiệu giả mạo rõ ràng.', severity: 'low', icon: 'check_circle' }
+        ]
+      },
+      link: {
+        high: [
+          { id: 1, title: 'Đường dẫn đáng ngờ', description: 'Đường dẫn có dấu hiệu không an toàn. Không nên truy cập.', severity: 'high', icon: 'dangerous' }
+        ],
+        medium: [
+          { id: 1, title: 'Cần thận trọng', description: 'Chưa thể xác minh đầy đủ khi offline. Hãy cẩn thận.', severity: 'medium', icon: 'info' }
+        ],
+        low: [
+          { id: 1, title: 'Đường dẫn có vẻ an toàn', description: 'Không phát hiện dấu hiệu đáng ngờ rõ ràng.', severity: 'low', icon: 'check_circle' }
+        ]
+      }
+    };
+    return templates[type]?.[riskLevel] || [];
+  }
+
+  // Generate fallback metrics for offline mode
+  generateFallbackMetrics(type, riskLevel) {
+    return {
+      offline_mode: { label: 'Chế độ', value: 'Offline', status: 'warning' },
+      accuracy: { label: 'Độ chính xác', value: 'Thấp (cần server)', status: riskLevel === 'low' ? 'normal' : 'warning' }
+    };
   }
 
   async getHistory(limit = 20, offset = 0) {
@@ -555,6 +610,10 @@ class ResultRenderer {
 
     // Update warning text based on actual result
     this.updateWarning(result);
+
+    // Render Explainable AI sections
+    this.renderExplanations(result.explanations || []);
+    this.renderMetrics(result.analysisMetrics || {});
   }
 
   updateGauge(riskLevel) {
@@ -603,7 +662,95 @@ class ResultRenderer {
       }
     }
   }
-}
+
+  renderExplanations(explanations) {
+    const container = document.getElementById('explanations-container');
+    if (!container) return;
+
+    if (!explanations || explanations.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const severityColors = {
+      high: 'bg-error-container text-on-error-container border-l-4 border-error',
+      medium: 'bg-tertiary-fixed text-on-tertiary-fixed border-l-4 border-tertiary',
+      low: 'bg-secondary-container text-on-secondary-container border-l-4 border-secondary'
+    };
+
+    const severityLabels = {
+      high: 'Nghiêm trọng',
+      medium: 'Cảnh báo',
+      low: 'Thông tin'
+    };
+
+    container.innerHTML = `
+      <h3 class="title-md font-bold mb-4 text-on-surface">Các dấu hiệu phát hiện</h3>
+      ${explanations.map(exp => `
+        <div class="card-base p-4 rounded-xl ${severityColors[exp.severity] || severityColors.medium}">
+          <div class="flex gap-4">
+            <span class="material-symbols-outlined flex-shrink-0 text-xl" style="font-variation-settings: 'FILL' 1;">${exp.icon || 'info'}</span>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <p class="font-bold text-base">${exp.title}</p>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-black/20">${severityLabels[exp.severity] || 'Thông tin'}</span>
+              </div>
+              <p class="body-md leading-relaxed">${exp.description}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  renderMetrics(metrics) {
+    const container = document.getElementById('metrics-container');
+    if (!container) return;
+
+    if (!metrics || Object.keys(metrics).length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const metricsArray = Object.entries(metrics).map(([key, value]) => ({
+      key,
+      ...value
+    }));
+
+    container.innerHTML = `
+      <details class="card-lowest card-base p-6 rounded-xl cursor-pointer group">
+        <summary class="flex items-center justify-between font-bold text-on-surface text-base select-none">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">analytics</span>
+            <span>Chỉ số kỹ thuật chi tiết</span>
+          </div>
+          <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+        </summary>
+        <div class="mt-6 space-y-4">
+          ${metricsArray.map(metric => {
+            const statusColors = {
+              abnormal: 'text-error',
+              warning: 'text-tertiary',
+              normal: 'text-secondary'
+            };
+            return `
+              <div class="flex justify-between items-start pb-3 border-b border-outline-variant/30">
+                <div>
+                  <p class="font-semibold text-on-surface">${metric.label}</p>
+                  <p class="text-sm text-on-surface-variant">Giá trị: <span class="font-mono">${metric.value}</span></p>
+                  ${metric.normal ? `<p class="text-sm text-on-surface-variant">Bình thường: <span class="font-mono">${metric.normal}</span></p>` : ''}
+                  ${metric.threshold ? `<p class="text-sm text-on-surface-variant">Ngưỡng: <span class="font-mono">${metric.threshold}</span></p>` : ''}
+                </div>
+                <span class="text-xs font-bold px-3 py-1 rounded-full ${statusColors[metric.status] || 'text-on-surface-variant'} bg-black/10">
+                  ${metric.status === 'abnormal' ? 'Bất thường' : metric.status === 'warning' ? 'Cảnh báo' : 'Bình thường'}
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </details>
+    `;
+  }
 
 // ============================================
 // GLOBAL APP INSTANCE
