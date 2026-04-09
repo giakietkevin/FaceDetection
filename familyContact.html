@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#005045",
+                    "inverse-primary": "#87d0f2",
+                    "on-error": "#ffffff",
+                    "on-background": "#191c1d",
+                    "on-tertiary-container": "#ffccc5",
+                    "secondary-container": "#8ff1dd",
+                    "inverse-on-surface": "#eff1f2",
+                    "on-surface-variant": "#3f484d",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#87d0f2",
+                    "surface-container-low": "#f2f4f5",
+                    "on-secondary-fixed": "#00201b",
+                    "error-container": "#ffdad6",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#eceeef",
+                    "primary-fixed": "#bee9ff",
+                    "on-surface": "#191c1d",
+                    "surface-bright": "#f8f9fa",
+                    "surface-tint": "#016684",
+                    "on-tertiary-fixed-variant": "#93000b",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#006b5c",
+                    "primary": "#004d64",
+                    "inverse-surface": "#2e3132",
+                    "surface": "#f8f9fa",
+                    "on-primary-fixed": "#001f2a",
+                    "on-primary-fixed-variant": "#004d64",
+                    "on-secondary-container": "#007061",
+                    "secondary-fixed": "#92f4df",
+                    "tertiary": "#92000b",
+                    "tertiary-fixed-dim": "#ffb4ab",
+                    "on-tertiary-fixed": "#410002",
+                    "outline-variant": "#bfc8cd",
+                    "tertiary-fixed": "#ffdad6",
+                    "secondary-fixed-dim": "#75d8c4",
+                    "on-primary-container": "#a2e1ff",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-dim": "#d8dadb",
+                    "tertiary-container": "#b81c1c",
+                    "on-secondary": "#ffffff",
+                    "outline": "#70787e",
+                    "background": "#f8f9fa",
+                    "primary-container": "#006684",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#e1e3e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Lexend"],
+                    "body": ["Lexend"],
+                    "label": ["Lexend"]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .bg-signature-gradient {
+            background: linear-gradient(135deg, #004d64 0%, #006684 100%);
+        }
+        .glass-nav {
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface">
+<!-- TopNavBar (Shared Component Execution) -->
+<nav class="fixed top-0 w-full z-50 h-24 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-cyan-900/5">
+<div class="flex justify-between items-center px-12 h-full max-w-screen-2xl mx-auto">
+<div class="text-3xl font-black text-cyan-800 dark:text-cyan-200 uppercase tracking-tighter">SafeGuard Senior</div>
+<div class="hidden md:flex gap-12">
+<a class="font-lexend text-lg md:text-xl font-bold tracking-tight text-slate-600 dark:text-slate-400 font-medium pb-2 hover:text-cyan-800 dark:hover:text-cyan-200 transition-colors" href="#">Home</a>
+<a class="font-lexend text-lg md:text-xl font-bold tracking-tight text-slate-600 dark:text-slate-400 font-medium pb-2 hover:text-cyan-800 dark:hover:text-cyan-200 transition-colors" href="#">Detect</a>
+<a class="font-lexend text-lg md:text-xl font-bold tracking-tight text-slate-600 dark:text-slate-400 font-medium pb-2 hover:text-cyan-800 dark:hover:text-cyan-200 transition-colors" href="#">Help</a>
+</div>
+<button class="bg-signature-gradient text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-transform">Emergency Call</button>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800 h-[2px] w-full absolute bottom-0"></div>
+</nav>
+<main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto">
+<!-- Header Section -->
+<header class="mb-16">
+<h1 class="text-5xl md:text-7xl font-headline font-black text-primary tracking-tight mb-4">Kết Nối Với Người Thân</h1>
+<p class="text-xl md:text-2xl text-on-surface-variant max-w-3xl leading-relaxed">
+                An tâm hơn mỗi ngày. SafeGuard Senior giúp bạn tự động thông báo cho con cháu khi phát hiện các cuộc gọi hoặc tin nhắn có dấu hiệu lừa đảo.
+            </p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Settings Form Canvas -->
+<section class="lg:col-span-7 space-y-8">
+<!-- Phone Number Card -->
+<div class="bg-surface-container-lowest p-8 md:p-12 rounded-[2rem] shadow-sm">
+<div class="flex items-center gap-6 mb-8">
+<div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">person_add</span>
+</div>
+<h2 class="text-3xl font-bold">Thêm số điện thoại Zalo của con cháu</h2>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xl font-bold mb-3 text-on-surface">Tên gợi nhớ (ví dụ: Con trai út)</label>
+<input class="w-full h-18 px-6 bg-surface-container-low border-none rounded-xl text-xl focus:ring-4 focus:ring-primary-fixed transition-all" placeholder="Nhập tên người thân..." type="text"/>
+</div>
+<div>
+<label class="block text-xl font-bold mb-3 text-on-surface">Số điện thoại Zalo</label>
+<div class="relative">
+<input class="w-full h-18 pl-16 pr-6 bg-surface-container-low border-none rounded-xl text-xl focus:ring-4 focus:ring-primary-fixed transition-all" placeholder="090 000 0000" type="tel"/>
+<span class="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-primary" style="font-variation-settings: 'FILL' 1;">phone_android</span>
+</div>
+</div>
+<button class="w-full h-20 bg-signature-gradient text-white text-xl font-bold rounded-xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-4">
+<span class="material-symbols-outlined">save</span>
+                            Lưu thông tin kết nối
+                        </button>
+</div>
+</div>
+<!-- Automation Toggle Card -->
+<div class="bg-secondary-container/30 p-8 md:p-12 rounded-[2rem] border-2 border-secondary-container">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+<div class="flex-1">
+<h3 class="text-3xl font-black text-on-secondary-container mb-3">Tự động gửi kết quả nghi ngờ</h3>
+<p class="text-lg text-on-secondary-fixed-variant font-medium leading-relaxed">
+                                Khi hệ thống phát hiện rủi ro, thông tin sẽ được gửi ngay lập tức để con cháu kịp thời hỗ trợ bạn.
+                            </p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-24 h-12 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-10 after:w-11 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Visual Guide / Preview -->
+<aside class="lg:col-span-5">
+<div class="bg-surface-container-high p-8 md:p-12 rounded-[2rem] sticky top-32">
+<h3 class="text-2xl font-bold mb-8 flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">visibility</span>
+                        Xem trước thông báo
+                    </h3>
+<!-- Notification Mockup -->
+<div class="space-y-6">
+<div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-outline-variant/20">
+<div class="bg-[#0068ff] p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-[#0068ff]">Z</div>
+<span class="text-white font-bold">Zalo • Thông báo</span>
+</div>
+<span class="text-white/80 text-sm">Vừa xong</span>
+</div>
+<div class="p-6">
+<p class="text-on-surface font-bold text-lg mb-2">Cảnh báo từ SafeGuard Senior</p>
+<p class="text-on-surface-variant leading-snug">
+                                    Bố/Mẹ vừa nhận một cuộc gọi có dấu hiệu <span class="text-error font-bold italic">lừa đảo giả mạo ngân hàng</span>. Hệ thống đã tạm chặn để đảm bảo an toàn.
+                                </p>
+<div class="mt-4 flex gap-2">
+<button class="bg-surface-container-low text-primary px-4 py-2 rounded-lg font-bold text-sm">Liên hệ ngay</button>
+<button class="bg-surface-container-low text-on-surface-variant px-4 py-2 rounded-lg font-bold text-sm">Xem chi tiết</button>
+</div>
+</div>
+</div>
+<div class="bg-tertiary-container/10 p-6 rounded-2xl border-l-8 border-tertiary">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-tertiary text-3xl">info</span>
+<div>
+<p class="font-bold text-tertiary mb-1">Lời khuyên cho bạn</p>
+<p class="text-on-surface-variant text-sm">Việc kết nối giúp con cháu nắm bắt tình hình của bạn từ xa, giúp gia đình mình luôn được bảo vệ tốt nhất.</p>
+</div>
+</div>
+</div>
+<div class="rounded-3xl overflow-hidden relative h-64 shadow-2xl">
+<img class="w-full h-full object-cover" data-alt="warm and emotional close-up of an elderly hand holding a smartphone while a younger person rests their hand supportively on their shoulder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIg1wUfNtoCkyEBnTjlQLNRtxNqpt3HrComQ_tP6DyxRcQfy3JhFuaQdmXoIETxJM9knP3OLPcJNEbcxE21OYoAq4ngB0YY1cTGGQQY_aEF4IseAqczvpl8J_x5nX2q9pSu_Xr_EH6JIGL1jrM6ZFggg0rp844uMgSqB-6BnT2FaH9RCuLqohaxJGrD9fZqz5u5T4N_3FTXNotQci4csFNAUU6aSNkl0DdaTpdunEW7WVj2bnpjnQqdgf2MON1VibCWEzcSkrPIf6k"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+<p class="text-white font-bold text-lg">"Gia đình là lá chắn an toàn nhất."</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Supportive Info Section -->
+<section class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container p-10 rounded-[2rem]">
+<span class="material-symbols-outlined text-primary text-5xl mb-6">shield_with_heart</span>
+<h4 class="text-2xl font-bold mb-4">Bảo mật tuyệt đối</h4>
+<p class="text-on-surface-variant leading-relaxed">Dữ liệu chỉ được chia sẻ với người thân mà bạn đã cấp quyền. Không một ai khác có thể xem được.</p>
+</div>
+<div class="bg-surface-container p-10 rounded-[2rem]">
+<span class="material-symbols-outlined text-primary text-5xl mb-6">bolt</span>
+<h4 class="text-2xl font-bold mb-4">Phản ứng tức thì</h4>
+<p class="text-on-surface-variant leading-relaxed">Thông báo được gửi đi chỉ trong 0.5 giây sau khi phát hiện các dấu hiệu nghi ngờ lừa đảo.</p>
+</div>
+<div class="bg-surface-container p-10 rounded-[2rem]">
+<span class="material-symbols-outlined text-primary text-5xl mb-6">support_agent</span>
+<h4 class="text-2xl font-bold mb-4">Hỗ trợ 24/7</h4>
+<p class="text-on-surface-variant leading-relaxed">Nếu có bất kỳ khó khăn nào trong việc cài đặt, đội ngũ SGS luôn sẵn sàng hỗ trợ bạn qua điện thoại.</p>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component Execution) -->
+<footer class="bg-slate-50 dark:bg-slate-950 w-full py-16 px-12 border-t-8 border-cyan-50 dark:border-slate-900">
+<div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-bold text-cyan-800 dark:text-cyan-200">SafeGuard Senior</div>
+<p class="font-lexend text-base md:text-lg leading-relaxed text-slate-500 dark:text-slate-400 text-center md:text-left">
+                © 2024 SafeGuard Senior. All rights reserved. Your privacy and safety are our priority.
+            </p>
+<div class="flex gap-8">
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-cyan-700 dark:hover:text-cyan-300" href="#">Privacy Policy</a>
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-cyan-700 dark:hover:text-cyan-300" href="#">Terms of Service</a>
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-cyan-700 dark:hover:text-cyan-300" href="#">Senior Safety Guide</a>
+</div>
+</div>
+</footer>
+</body></html>
