@@ -27,7 +27,9 @@
       "Bash(curl -s -X POST -H \"x-user-id: test_user_456\" -H \"Content-Type: application/json\" -d '{\"url\":\"https://fake-bank.xyz/login\"}' http://localhost:3000/api/detect/link)",
       "Bash(taskkill //F //IM node.exe)",
       "Bash(pkill -f \"node server/index.js\")",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs taskkill:*)"
     ]
   }
 }
