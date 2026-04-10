@@ -72,4 +72,7 @@ function runMigrations() {
   if (!cols.includes('analysisMetrics')) {
     db.exec('ALTER TABLE detections ADD COLUMN analysisMetrics TEXT;');
   }
+  if (!cols.includes('filePath')) {
+    db.exec('ALTER TABLE detections ADD COLUMN filePath TEXT;');
+  }
 }

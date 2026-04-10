@@ -158,7 +158,9 @@ class DetectionHandler {
       const result = await this.api.postFile('/detect/video', file);
 
       if (result.success) {
-        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        const detection = result.detection;
+        // The backend returns filePath if successful, which we can use instead of fragile Blob URLs
+        localStorage.setItem('latestDetection', JSON.stringify(detection));
         window.location.href = 'detectResult.html';
       } else {
         this.hideLoading();
@@ -183,7 +185,8 @@ class DetectionHandler {
       const result = await this.api.postFile('/detect/audio', file);
 
       if (result.success) {
-        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        const detection = result.detection;
+        localStorage.setItem('latestDetection', JSON.stringify(detection));
         window.location.href = 'detectResult.html';
       } else {
         this.hideLoading();
@@ -911,6 +914,9 @@ const app = {
       return;
     }
 
+    // Display media preview if available
+    this.displayMediaPreview(result);
+
     // Render result data
     this.resultRenderer.updateResultPage(result);
 
@@ -950,6 +956,59 @@ const app = {
     if (result.riskLevel === 'high' || result.riskLevel === 'medium') {
       this.familyContact.notifyContacts(result);
     }
+  },
+
+  displayMediaPreview(result) {
+    const container = document.getElementById('media-preview-container');
+    if (!container) return;
+
+    let mediaUrl = null;
+    let mediaType = null;
+
+    if (result.filePath) {
+      // API_BASE is typically /api, so we use window.location.origin
+      mediaUrl = window.location.origin + result.filePath;
+      mediaType = result.type === 'video' ? 'video' : result.type === 'audio' ? 'audio' : 'image';
+
+      // Fallback detection for image extensions
+      const ext = result.filePath.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+        mediaType = 'image';
+      } else if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) {
+        mediaType = 'audio';
+      }
+    }
+
+    if (!mediaUrl || mediaType === 'link') {
+      return; // Link uses different preview or no preview
+    }
+
+    const imgElement = document.getElementById('media-preview-image');
+    const videoElement = document.getElementById('media-preview-video');
+    const audioElement = document.getElementById('media-preview-audio');
+    const placeholder = document.getElementById('media-preview-placeholder');
+
+    if (mediaType === 'image') {
+      imgElement.src = mediaUrl;
+      imgElement.style.display = 'block';
+      videoElement.style.display = 'none';
+      audioElement.style.display = 'none';
+      placeholder.style.display = 'none';
+    } else if (mediaType === 'video') {
+      videoElement.src = mediaUrl;
+      videoElement.style.display = 'block';
+      imgElement.style.display = 'none';
+      audioElement.style.display = 'none';
+      placeholder.style.display = 'none';
+    } else if (mediaType === 'audio') {
+      audioElement.src = mediaUrl;
+      audioElement.style.display = 'block';
+      imgElement.style.display = 'none';
+      videoElement.style.display = 'none';
+      placeholder.style.display = 'none';
+    }
+
+    container.style.display = 'block';
   },
 
   async sendNotificationToFamily() {

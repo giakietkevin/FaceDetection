@@ -8,7 +8,7 @@ const Detection = {
   /**
    * Create a new detection record
    */
-  create({ userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics }) {
+  create({ userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics, filePath }) {
     const detection = {
       id: uuidv4(),
       userId,
@@ -20,12 +20,13 @@ const Detection = {
       details: details || null,
       explanations: explanations ? JSON.stringify(explanations) : null,
       analysisMetrics: analysisMetrics ? JSON.stringify(analysisMetrics) : null,
+      filePath: filePath || null,
       createdAt: new Date().toISOString()
     };
 
     db.prepare(`
-      INSERT INTO detections (id, userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics, createdAt)
-      VALUES (@id, @userId, @type, @fileName, @url, @riskLevel, @confidence, @details, @explanations, @analysisMetrics, @createdAt)
+      INSERT INTO detections (id, userId, type, fileName, url, riskLevel, confidence, details, explanations, analysisMetrics, filePath, createdAt)
+      VALUES (@id, @userId, @type, @fileName, @url, @riskLevel, @confidence, @details, @explanations, @analysisMetrics, @filePath, @createdAt)
     `).run(detection);
 
     // Return parsed version for API response

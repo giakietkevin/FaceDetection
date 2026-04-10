@@ -68,7 +68,8 @@ router.post('/video', extractUserId, rateLimit(30, 60000), upload.single('file')
       confidence: analysis.confidence,
       details: analysis.detail,
       explanations: analysis.explanations,
-      analysisMetrics: analysis.metrics
+      analysisMetrics: analysis.metrics,
+      filePath: `/uploads/${file.filename}`
     });
 
     // Auto-notify family if high/medium risk
@@ -106,7 +107,8 @@ router.post('/audio', extractUserId, rateLimit(30, 60000), upload.single('file')
       confidence: analysis.confidence,
       details: analysis.detail,
       explanations: analysis.explanations,
-      analysisMetrics: analysis.metrics
+      analysisMetrics: analysis.metrics,
+      filePath: `/uploads/${file.filename}`
     });
 
     // Auto-notify family if high/medium risk

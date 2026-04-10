@@ -17,6 +17,11 @@
             top: 50%;
             transform: translate(-50%, -50%);
         }
+        audio {
+            width: 100%;
+            height: 50px;
+            margin: 1rem 0;
+        }
     </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
@@ -41,6 +46,21 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
 <!-- Trust Meter Column -->
 <div class="lg:col-span-7 flex flex-col gap-12">
+<!-- Media Preview Card -->
+<div id="media-preview-container" class="card-lowest card-base rounded-2xl overflow-hidden" style="display: none;">
+<div class="flex items-center gap-4 mb-4 p-6 pb-0">
+<span class="material-symbols-outlined icon-md text-primary" style="font-variation-settings: 'FILL' 1;">image</span>
+<h2 class="title-md font-bold tracking-tight">Nội dung được phân tích</h2>
+</div>
+<div class="relative w-full bg-surface-container-high">
+<img id="media-preview-image" class="w-full h-auto max-h-96 object-contain" style="display: none;" />
+<video id="media-preview-video" class="w-full h-auto max-h-96 object-contain" style="display: none;" controls></video>
+<audio id="media-preview-audio" class="w-full" style="display: none;" controls></audio>
+<div id="media-preview-placeholder" class="w-full h-64 flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined icon-lg">image_not_supported</span>
+</div>
+</div>
+</div>
 <!-- Trust Meter Card -->
 <div class="card-lowest card-base relative overflow-hidden">
 <div class="flex items-center gap-4 mb-10">
