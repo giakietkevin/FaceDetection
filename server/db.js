@@ -4,7 +4,8 @@ const path = require('path');
 const dbPath = path.join(__dirname, '../data/safeguard.db');
 const db = new Database(dbPath);
 
-// Foreign keys off — no real auth yet; userId is a client-generated string
+// Foreign keys OFF — no real auth yet; userId is a client-generated string
+db.pragma('foreign_keys = OFF');
 // Enable WAL mode for better concurrent read performance
 db.pragma('journal_mode = WAL');
 

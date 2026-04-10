@@ -759,6 +759,7 @@ class ResultRenderer {
       </details>
     `;
   }
+}
 
 // ============================================
 // GLOBAL APP INSTANCE
@@ -822,38 +823,46 @@ const app = {
     this.loadStatistics();
 
     // Video/Image upload button
-    const videoBtn = document.querySelector('.hero-action-btn.signature-gradient');
+    const videoBtn = document.getElementById('video-upload-btn');
     if (videoBtn) {
       videoBtn.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'video/*,image/*';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
         input.onchange = (e) => {
           const file = e.target.files[0];
           if (file) this.detection.handleVideoUpload(file);
+          document.body.removeChild(input);
         };
         input.click();
       });
     }
 
     // Audio upload button
-    const audioBtn = document.querySelector('.hero-action-btn.card-secondary');
+    const audioBtn = document.getElementById('audio-upload-btn');
     if (audioBtn) {
       audioBtn.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'audio/*';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
         input.onchange = (e) => {
           const file = e.target.files[0];
           if (file) this.detection.handleAudioUpload(file);
+          document.body.removeChild(input);
         };
         input.click();
       });
     }
 
     // Link check
-    const linkInput = document.querySelector('input[placeholder*="Dán link"]');
-    const linkBtn = linkInput?.parentElement?.querySelector('button');
+    const linkInput = document.getElementById('link-input');
+    const linkBtn = document.getElementById('link-check-btn');
     if (linkInput && linkBtn) {
       const checkLink = () => {
         const url = linkInput.value.trim();
@@ -868,8 +877,8 @@ const app = {
     }
 
     // "Gửi cho con cháu" button
-    const sendFamilyBtn = document.querySelector('button.btn-outline');
-    if (sendFamilyBtn && sendFamilyBtn.textContent.includes('CON CHÁU')) {
+    const sendFamilyBtn = document.getElementById('send-family-btn');
+    if (sendFamilyBtn) {
       sendFamilyBtn.addEventListener('click', () => {
         this.router.navigateTo('family');
       });
@@ -893,7 +902,7 @@ const app = {
     } catch (err) {
       console.error('[loadStatistics] Error:', err);
     }
-  }
+  },
 
   initDetectResultPage() {
     const result = this.detection.getLatestDetection();
@@ -965,7 +974,7 @@ const app = {
       this.detection.hideLoading();
       this.detection.showError('Lỗi khi gửi thông báo');
     }
-  }
+  },
 
   async initFamilyContactPage() {
     const nameInput = document.querySelector('input[placeholder*="tên người thân"]');
@@ -1073,7 +1082,7 @@ const app = {
       this.detection.hideLoading();
       this.detection.showError('Lỗi khi gửi tin nhắn thử nghiệm');
     }
-  }
+  },
 
   async showHistoryModal() {
     const historyData = await this.detection.getHistory(50, 0);
@@ -1152,6 +1161,67 @@ const app = {
       toast.classList.add('animate-slide-out');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  },
+
+  showDemoResult(type) {
+    const demoResults = {
+      video: {
+        id: 'demo_' + Date.now(),
+        type: 'video',
+        fileName: 'demo_video.mp4',
+        riskLevel: 'high',
+        confidence: 87,
+        details: 'Demo: Phát hiện dấu hiệu deepfake rõ ràng. Vùng mắt chớp không tự nhiên, khẩu hình miệng không khớp âm thanh.',
+        explanations: [
+          { id: 1, title: 'Nhịp chớp mắt bất thường', description: 'Phát hiện tần suất chớp mắt 2.3 lần/phút, thấp hơn nhiều so với mức bình thường (15-20 lần/phút).', severity: 'high', icon: 'visibility_off' },
+          { id: 2, title: 'Khẩu hình miệng không khớp âm thanh', description: 'Chuyển động miệng lệch so với âm thanh khoảng 120ms. Người nói thật sẽ có độ đồng bộ dưới 30ms.', severity: 'high', icon: 'voice_over_off' }
+        ],
+        analysisMetrics: {
+          blink_rate: { label: 'Tần suất chớp mắt', value: '2.3/phút', normal: '15-20/phút', status: 'abnormal' },
+          lip_sync_delay: { label: 'Độ trễ khẩu hình', value: '120ms', threshold: '< 30ms', status: 'abnormal' }
+        },
+        createdAt: new Date().toISOString()
+      },
+      audio: {
+        id: 'demo_' + Date.now(),
+        type: 'audio',
+        fileName: 'demo_audio.mp3',
+        riskLevel: 'medium',
+        confidence: 72,
+        details: 'Demo: Phát hiện một số dấu hiệu bất thường trong giọng nói. Tần số dao động nhẹ, có thể do xử lý.',
+        explanations: [
+          { id: 1, title: 'Tần số dao động nhẹ', description: 'Phát hiện dao động nhỏ trong tần số giọng nói. Có thể do chất lượng micro hoặc can thiệp nhẹ.', severity: 'medium', icon: 'graphic_eq' }
+        ],
+        analysisMetrics: {
+          pitch_fluctuation: { label: 'Dao động pitch', value: '7Hz', normal: '3-5Hz', status: 'warning' }
+        },
+        createdAt: new Date().toISOString()
+      },
+      link: {
+        id: 'demo_' + Date.now(),
+        type: 'link',
+        url: 'https://example-phishing.tk',
+        riskLevel: 'high',
+        confidence: 91,
+        details: 'Demo: Đường dẫn có dấu hiệu phishing rõ ràng. Domain đăng ký mới, sử dụng TLD đáng ngờ.',
+        explanations: [
+          { id: 1, title: 'Domain đăng ký mới', description: 'Tên miền được đăng ký dưới 30 ngày. Các trang web lừa đảo thường sử dụng domain mới để tránh bị phát hiện.', severity: 'high', icon: 'domain_disabled' },
+          { id: 2, title: 'TLD đáng ngờ', description: 'Sử dụng tên miền cấp cao .tk — thường được dùng cho các trang phishing.', severity: 'high', icon: 'warning' }
+        ],
+        analysisMetrics: {
+          domain_age: { label: 'Tuổi tên miền', value: '12 ngày', threshold: '> 365 ngày', status: 'abnormal' },
+          phishing_score: { label: 'Điểm phishing', value: '87/100', threshold: '< 30/100', status: 'abnormal' }
+        },
+        createdAt: new Date().toISOString()
+      }
+    };
+
+    const result = demoResults[type];
+    localStorage.setItem('latestDetection', JSON.stringify(result));
+    this.showSuccess('Demo mode: Đã tạo kết quả mẫu. Chuyển sang trang kết quả...');
+    setTimeout(() => {
+      window.location.href = 'detectResult.html';
+    }, 1000);
   }
 };
 

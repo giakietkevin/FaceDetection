@@ -127,3 +127,5 @@ const Detection = {
     };
   }
 };
+
+module.exports = Detection;
