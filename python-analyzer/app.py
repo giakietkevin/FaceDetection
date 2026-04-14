@@ -15,6 +15,16 @@ import os
 import sys
 import time
 import logging
+import codecs
+
+# Fix Windows console encoding for emojis/Vietnamese
+if sys.platform == 'win32':
+    try:
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer)
+    except Exception:
+        pass
+
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -112,7 +122,7 @@ async def health():
             "video": video_analyzer is not None and video_analyzer.is_ready(),
             "audio": audio_analyzer is not None and audio_analyzer.is_ready(),
         },
-        "device": image_analyzer.device if image_analyzer else "unknown"
+        "device": str(image_analyzer.device) if image_analyzer else "unknown"
     }
 
 

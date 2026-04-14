@@ -17,5 +17,6 @@ python-analyzer/__pycache__/
 python-analyzer/analyzers/__pycache__/
 python-analyzer/models/*.pth
 python-analyzer/models/*.pt
+python-analyzer/server_log.txt
 *.pyc
 __pycache__/
