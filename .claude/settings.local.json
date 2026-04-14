@@ -38,7 +38,29 @@
       "WebFetch(domain:thehive.ai)",
       "Bash(venv/Scripts/pip.exe install:*)",
       "Bash(venv/Scripts/python -c \"import torch; import torchvision; import torchaudio; import cv2; import librosa; print\\('All libraries loaded successfully! CUDA available:', torch.cuda.is_available\\(\\)\\)\")",
-      "Bash(venv/Scripts/python app.py)"
+      "Bash(venv/Scripts/python app.py)",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=deepfake+detection&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=asvspoof&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=audio+spoofing+detection&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=efficientnet+deepfake&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=resnet+deepfake&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=xception+deepfake&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/api/models?search=FaceForensics+deepfake&sort=downloads&direction=-1&limit=20\")",
+      "Bash(curl -s \"https://huggingface.co/dima806/deepfake_vs_real_image_detection\")",
+      "Bash(python3 -c \"import sys; content=sys.stdin.read\\(\\); import re; card=re.findall\\(r'<meta.*?>', content\\)[:20]; [print\\(c\\) for c in card]; print\\('---'\\); print\\(content[5000:8000]\\)\")",
+      "Bash(curl -s \"https://huggingface.co/api/models/dima806/deepfake_vs_real_image_detection\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"https://huggingface.co/api/models/mo-thecreator/Deepfake-audio-detection\")",
+      "Bash(curl -s \"https://huggingface.co/api/models/SuriyaaMM/google-efficientnet-b1-deepfake\")",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python.exe -m pip install --upgrade pip)",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "Bash(venv/Scripts/python.exe app.py)",
+      "Bash(curl -X GET http://localhost:8001/health)",
+      "Bash(venv/Scripts/pip uninstall:*)",
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\")",
+      "Bash(tasklist /FI \"IMAGENAME eq pythonw.exe\")",
+      "Bash(taskkill //F //IM python.exe //T)"
     ]
   }
 }
