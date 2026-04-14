@@ -1156,31 +1156,57 @@ const app = {
     const typeLabels = { video: 'Video/Ảnh', audio: 'Giọng nói', link: 'Đường dẫn' };
 
     modal.innerHTML = `
-      <div class="card-lowest card-base max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col animate-scale-up">
-        <div class="flex items-center justify-between mb-6">
+      <div class="card-lowest card-base max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col animate-scale-up">
+        <div class="flex items-center justify-between mb-6 p-6 pb-0">
           <h2 class="title-lg">Lịch sử phân tích</h2>
           <button onclick="document.getElementById('history-modal').remove()" class="touch-target hover:bg-surface-container-high rounded-xl transition-colors">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div class="overflow-y-auto flex-1 space-y-3">
+        <div class="overflow-y-auto flex-1 space-y-3 p-6">
           ${detections.length === 0
             ? '<p class="body-lg text-on-surface-variant text-center py-8">Chưa có lịch sử phân tích</p>'
             : detections.map(d => `
-              <div class="card-low card-base p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl ${d.riskLevel === 'high' ? 'bg-error-container' : d.riskLevel === 'medium' ? 'bg-tertiary-fixed' : 'bg-secondary-container'} flex items-center justify-center flex-shrink-0">
-                  <span class="material-symbols-outlined ${riskColors[d.riskLevel]}" style="font-variation-settings: 'FILL' 1;">
-                    ${d.riskLevel === 'high' ? 'warning' : d.riskLevel === 'medium' ? 'help' : 'check_circle'}
-                  </span>
+              <div class="card-low card-base p-4 flex items-center gap-4 hover:bg-surface-container-high transition-colors cursor-pointer" onclick="app.loadHistoryItem('${d.id}')">
+                <!-- Thumbnail -->
+                <div class="w-20 h-20 rounded-lg bg-surface-container-high flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  ${d.filePath ? `
+                    ${['jpg', 'jpeg', 'png', 'webp'].includes(d.filePath.split('.').pop().toLowerCase())
+                      ? `<img src="${window.location.origin}${d.filePath}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\\'material-symbols-outlined text-on-surface-variant\\'>image</span>'" />`
+                      : ['mp4', 'avi', 'mov', 'webm'].includes(d.filePath.split('.').pop().toLowerCase())
+                      ? `<span class="material-symbols-outlined text-on-surface-variant icon-lg" style="font-variation-settings: 'FILL' 1;">video_library</span>`
+                      : ['mp3', 'wav', 'ogg', 'm4a'].includes(d.filePath.split('.').pop().toLowerCase())
+                      ? `<span class="material-symbols-outlined text-on-surface-variant icon-lg" style="font-variation-settings: 'FILL' 1;">audio_file</span>`
+                      : `<span class="material-symbols-outlined text-on-surface-variant icon-lg">file_present</span>`
+                    }
+                  ` : `
+                    ${d.type === 'link'
+                      ? `<span class="material-symbols-outlined text-on-surface-variant icon-lg" style="font-variation-settings: 'FILL' 1;">link</span>`
+                      : `<span class="material-symbols-outlined text-on-surface-variant icon-lg">file_present</span>`
+                    }
+                  `}
                 </div>
+
+                <!-- Info -->
                 <div class="flex-1 min-w-0">
                   <p class="font-bold text-on-surface truncate">${typeLabels[d.type] || d.type} — ${riskLabels[d.riskLevel]}</p>
                   <p class="body-md text-on-surface-variant truncate">${d.fileName || d.url || 'N/A'}</p>
+                  <p class="text-xs text-on-surface-variant">${new Date(d.createdAt).toLocaleDateString('vi-VN')} ${new Date(d.createdAt).toLocaleTimeString('vi-VN')}</p>
                 </div>
+
+                <!-- Risk Badge -->
                 <div class="text-right flex-shrink-0">
                   <p class="font-bold ${riskColors[d.riskLevel]}">${d.confidence}%</p>
-                  <p class="text-sm text-on-surface-variant">${new Date(d.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <div class="w-12 h-12 rounded-full flex items-center justify-center ${
+                    d.riskLevel === 'high' ? 'bg-error-container' :
+                    d.riskLevel === 'medium' ? 'bg-tertiary-fixed' :
+                    'bg-secondary-container'
+                  }">
+                    <span class="material-symbols-outlined text-sm ${riskColors[d.riskLevel]}" style="font-variation-settings: 'FILL' 1;">
+                      ${d.riskLevel === 'high' ? 'warning' : d.riskLevel === 'medium' ? 'help' : 'check_circle'}
+                    </span>
+                  </div>
                 </div>
               </div>
             `).join('')
@@ -1194,6 +1220,19 @@ const app = {
     });
 
     document.body.appendChild(modal);
+  },
+
+  async loadHistoryItem(detectionId) {
+    try {
+      const result = await this.api.get(`/detect/${detectionId}`);
+      if (result.success) {
+        localStorage.setItem('latestDetection', JSON.stringify(result.detection));
+        document.getElementById('history-modal').remove();
+        window.location.href = 'detectResult.html';
+      }
+    } catch (err) {
+      this.detection.showError('Lỗi khi tải kết quả phân tích');
+    }
   },
 
   shareResult(result) {

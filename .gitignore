@@ -10,3 +10,12 @@ yarn-error.log*
 dist/
 build/
 .cache/
+
+# Python
+python-analyzer/venv/
+python-analyzer/__pycache__/
+python-analyzer/analyzers/__pycache__/
+python-analyzer/models/*.pth
+python-analyzer/models/*.pt
+*.pyc
+__pycache__/

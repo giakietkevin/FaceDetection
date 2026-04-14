@@ -56,8 +56,8 @@ router.post('/video', extractUserId, rateLimit(30, 60000), upload.single('file')
       return res.status(400).json({ success: false, message: 'Vui lòng tải lên file video hoặc ảnh' });
     }
 
-    // Run analysis
-    const analysis = analysisService.analyzeVideo(file.originalname);
+    // Run analysis via Python Sidecar
+    const analysis = await analysisService.analyzeMedia(file.path, file.originalname, 'video');
 
     // Save to database
     const detection = Detection.create({
@@ -95,8 +95,8 @@ router.post('/audio', extractUserId, rateLimit(30, 60000), upload.single('file')
       return res.status(400).json({ success: false, message: 'Vui lòng tải lên file âm thanh' });
     }
 
-    // Run analysis
-    const analysis = analysisService.analyzeAudio(file.originalname);
+    // Run analysis via Python Sidecar
+    const analysis = await analysisService.analyzeMedia(file.path, file.originalname, 'audio');
 
     // Save to database
     const detection = Detection.create({
