@@ -785,6 +785,9 @@ const app = {
     this.emergency = new EmergencyHandler();
     this.resultRenderer = new ResultRenderer();
 
+    // Apply saved theme before anything renders visibly
+    this.initTheme();
+
     // Load contacts from server
     await this.familyContact.loadContacts();
 
@@ -792,7 +795,41 @@ const app = {
     this.initPageSpecific();
   },
 
+  initTheme() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    this.updateThemeToggleIcon();
+  },
+
+  toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    this.updateThemeToggleIcon();
+  },
+
+  updateThemeToggleIcon() {
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (!icon) return;
+    const isDark = document.documentElement.classList.contains('dark');
+    icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    btn.title = isDark ? 'Chuyển sang sáng' : 'Chuyển sang tối';
+  },
+
   initEventListeners() {
+    // Theme toggle (on all pages)
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => this.toggleTheme());
+    }
+
     // Emergency button (on all pages)
     const emergencyBtn = document.querySelector('nav button.btn-error');
     if (emergencyBtn) {

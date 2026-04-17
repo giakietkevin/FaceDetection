@@ -56,7 +56,7 @@ const fallbackService = {
 
 class AnalysisService {
   constructor() {
-    this.PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8001';
+    this.PYTHON_API_URL = (process.env.PYTHON_API_URL || 'http://localhost:8001').trim();
   }
 
   /**

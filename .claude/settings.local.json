@@ -65,7 +65,9 @@
       "Bash(venv/Scripts/python.exe -c \"import mediapipe; print\\(dir\\(mediapipe\\)\\)\")",
       "Bash(venv/Scripts/python.exe -c \"import mediapipe as mp; print\\(hasattr\\(mp, 'solutions'\\)\\); fm = mp.solutions.face_mesh.FaceMesh\\(static_image_mode=False, max_num_faces=1\\); print\\('FaceMesh OK'\\)\")",
       "Bash(curl:*)",
-      "Bash(findstr 8001)"
+      "Bash(findstr 8001)",
+      "Bash(git add *)",
+      "Bash(git reset *)"
     ]
   }
 }
