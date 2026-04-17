@@ -278,20 +278,24 @@ class VideoAnalyzer:
 
         # ── Ensemble ────────────────────────────────────────────────────
         score_components = {
-            'cnn': avg_cnn * 0.35,
-            'temporal': min(temporal_var / 50, 1.0) * 0.15,
-            'flicker': min(flicker_events / max(total_analyzed * 0.1, 1), 1.0) * 0.15,
-            'boundary': (1.0 - avg_boundary) * 0.10,
-            'blink': blink_score * 0.15,
-            'flow': min(flow_variance / 5, 1.0) * 0.10,
+            'cnn': avg_cnn * 0.50,  # Tăng trọng số model chuyên dụng HuggingFace
+            'temporal': min(temporal_var / 80, 1.0) * 0.10, # Giảm nhạy cảm với video rung tay
+            'flicker': min(flicker_events / max(total_analyzed * 0.15, 1), 1.0) * 0.10,
+            'boundary': (1.0 - avg_boundary) * 0.15,
+            'blink': blink_score * 0.10,
+            'flow': min(flow_variance / 8, 1.0) * 0.05,
         }
         total_score = sum(score_components.values())
 
-        if avg_cnn > 0.7 and cnn_std < 0.1:
-            total_score = min(1.0, total_score + 0.1)
+        # Logic boosting điểm số
+        if avg_cnn > 0.85 and cnn_std < 0.1:
+            total_score = min(1.0, total_score + 0.15)
+        elif avg_cnn < 0.3: # Nếu CNN chắc chắn là thật, giảm điểm tổng xuống
+            total_score = max(0.0, total_score - 0.2)
 
-        if total_score >= 0.65: risk_level = 'high'
-        elif total_score >= 0.35: risk_level = 'medium'
+        # Nâng ngưỡng đánh giá để tránh False Positives
+        if total_score >= 0.70: risk_level = 'high'
+        elif total_score >= 0.45: risk_level = 'medium'
         else: risk_level = 'low'
 
         confidence = int(total_score * 100)
@@ -353,9 +357,9 @@ class VideoAnalyzer:
         }
 
     def _analyze_blink_rate(self, blink_data, duration):
-        """Phân tích blink rate từ EAR data."""
+        """Phân tích blink rate từ EAR data. Tối ưu cho video ngắn."""
         if not blink_data or duration < 1:
-            return 0.0, -1, 'Không đủ dữ liệu'
+            return 0.0, -1, 'Video quá ngắn hoặc không có dữ liệu chớp mắt'
 
         ears = [b['ear'] for b in blink_data]
         blink_threshold = 0.21  # EAR < 0.21 = mắt nhắm
@@ -374,6 +378,10 @@ class VideoAnalyzer:
         blink_rate_per_min = (blink_count / duration) * 60
         score = 0.0
 
+        # Tối ưu: Nếu video < 5s mà không chớp mắt thì là chuyện bình thường
+        if duration < 5.0 and blink_count == 0:
+            return 0.0, 0, 'Video ngắn, không chớp mắt là bình thường'
+
         # Bình thường: 15-20 blinks/phút
         if blink_rate_per_min < 3:
             score = 0.85
@@ -381,6 +389,9 @@ class VideoAnalyzer:
         elif blink_rate_per_min < 10:
             score = 0.5
             detail = f'{blink_rate_per_min:.0f} blinks/phút - ít hơn bình thường'
+        elif blink_rate_per_min > 45: # Nhấp nháy mắt do lỗi AI ghép nối
+            score = 0.6
+            detail = f'{blink_rate_per_min:.0f} blinks/phút - quá nhiều, bất thường'
         else:
             score = 0.1
             detail = f'{blink_rate_per_min:.0f} blinks/phút - bình thường'
